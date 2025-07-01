@@ -4,37 +4,88 @@ export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const measurePing = async (url = '/ping.json') => {
+  const SERVER = 'http://209.38.91.160';
+
+  // Measure ping
+  const measurePing = async () => {
     const times = [];
     for (let i = 0; i < 5; i++) {
       const start = performance.now();
-      await fetch(`${url}?t=${Date.now()}`);
+      await fetch(`${SERVER}/ping.json?t=${Date.now()}`);
       const end = performance.now();
       times.push(end - start);
     }
     return (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
   };
 
-  const measureDownload = async (url = '/10MB.test') => {
+  // Improved Download Test: multiple parallel requests over a fixed duration
+  const measureDownload = async () => {
+    const url = `${SERVER}/100MB.bin`;
+    const concurrency = 4;
+    const testDuration = 10 * 1000; // 10 seconds
+
+    let totalBytes = 0;
+    let isStopped = false;
+
+    const download = async () => {
+      while (!isStopped) {
+        const res = await fetch(`${url}?cacheBust=${Math.random()}`);
+        const reader = res.body.getReader();
+        while (!isStopped) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.length;
+        }
+      }
+    };
+
+    const downloads = new Array(concurrency).fill(0).map(download);
+
     const start = performance.now();
-    const res = await fetch(`${url}?t=${Date.now()}`);
-    const blob = await res.blob();
-    const end = performance.now();
-    const duration = (end - start) / 1000;
-    return ((blob.size * 8) / duration / 1_000_000).toFixed(2); // Mbps
+    await Promise.race([
+      new Promise((resolve) => setTimeout(resolve, testDuration)),
+      Promise.all(downloads),
+    ]);
+    isStopped = true;
+    const duration = (performance.now() - start) / 1000;
+    return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
   };
 
   const measureUpload = async () => {
-    const blob = new Blob([new Uint8Array(10 * 1024 * 1024)]);
+    const blob = new Blob([new Uint8Array(20 * 1024 * 1024)]); // 20MB
     const start = performance.now();
-    await fetch('https://httpbin.org/post', {
-      method: 'POST',
-      body: blob,
+
+    await fetch('http://209.38.91.160:3000/upload', {
+        method: 'POST',
+        body: blob,
     });
+
     const end = performance.now();
     const duration = (end - start) / 1000;
     return ((blob.size * 8) / duration / 1_000_000).toFixed(2); // Mbps
-  };
+    };
+
+    const measureParallelUpload = async (url = 'http://209.38.91.160:3000/upload', concurrency = 4) => {
+  const blob = new Blob([new Uint8Array(10 * 1024 * 1024)]); // 10MB blob
+  const start = performance.now();
+
+  // Start multiple uploads in parallel
+  const uploads = new Array(concurrency).fill(null).map(() =>
+    fetch(url, {
+      method: 'POST',
+      body: blob,
+    })
+  );
+
+  // Wait for all uploads to complete
+  await Promise.all(uploads);
+
+  const end = performance.now();
+  const duration = (end - start) / 1000; // seconds
+
+  // Total bytes uploaded = concurrency * blob.size
+  return (((blob.size * concurrency) * 8) / duration / 1_000_000).toFixed(2); // Mbps
+};
 
   const runTest = async () => {
     setIsRunning(true);
@@ -42,7 +93,7 @@ export default function SpeedTest() {
     try {
       const ping = await measurePing();
       const download = await measureDownload();
-      const upload = await measureUpload();
+      const upload = await measureParallelUpload();
       setResults({ ping, download, upload });
     } catch (e) {
       setResults({ error: e.toString() });
