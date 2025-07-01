@@ -4,7 +4,7 @@ export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const SERVER = 'http://209.38.91.160';
+  const SERVER = 'https://700-digital-equity.digital';
 
   // Measure ping
   const measurePing = async () => {
@@ -55,7 +55,7 @@ export default function SpeedTest() {
     const blob = new Blob([new Uint8Array(20 * 1024 * 1024)]); // 20MB
     const start = performance.now();
 
-    await fetch('http://209.38.91.160:3000/upload', {
+    await fetch(`${SERVER}/upload`, {
         method: 'POST',
         body: blob,
     });
@@ -65,7 +65,7 @@ export default function SpeedTest() {
     return ((blob.size * 8) / duration / 1_000_000).toFixed(2); // Mbps
     };
 
-    const measureParallelUpload = async (url = 'http://209.38.91.160:3000/upload', concurrency = 4) => {
+    const measureParallelUpload = async (url = `${SERVER}/upload`, concurrency = 4) => {
   const blob = new Blob([new Uint8Array(10 * 1024 * 1024)]); // 10MB blob
   const start = performance.now();
 
