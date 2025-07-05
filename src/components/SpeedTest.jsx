@@ -98,6 +98,17 @@ export default function SpeedTest() {
     } catch (e) {
       setResults({ error: e.toString() });
     }
+    const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+    await fetch('http://localhost:3000/api/results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ip: publicIP.ip,
+        ping: results?.ping,
+        download: results?.download,
+        upload: results?.upload,     
+      }),
+    });
     setIsRunning(false);
   };
 

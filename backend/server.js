@@ -8,7 +8,24 @@ app.use(cors());
 app.use(express.json());
 
 const resultRoutes = require('./routes/results');
+const TestResult = require('./models/TestResult');
+const Result = require('./models/Result');
 app.use('/api/results', resultRoutes);
+
+
+app.get('/', (req, res) => {
+  res.send('Backend API is running');
+});
+
+app.get('/results', async (req, res) => {
+  try {
+    const results = await Result.find().sort({ timestamp: -1 }).limit(10);
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch results' });
+  }
+});
+
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
