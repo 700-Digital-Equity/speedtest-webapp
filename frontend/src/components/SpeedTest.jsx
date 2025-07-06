@@ -95,9 +95,22 @@ export default function SpeedTest() {
       const download = await measureDownload();
       const upload = await measureParallelUpload();
       setResults({ ping, download, upload });
+
+      const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+      await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ip: publicIP.ip,
+          ping,
+          download,
+          upload,
+        }),
+      });
     } catch (e) {
       setResults({ error: e.toString() });
     }
+    
     setIsRunning(false);
   };
 
