@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [name, setName] = useState('Anonymous');
+  const [location, setLocation] = useState('Unknown');
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -102,6 +104,8 @@ export default function SpeedTest() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ip: publicIP.ip,
+          name,
+          location,
           ping,
           download,
           upload,
@@ -117,6 +121,23 @@ export default function SpeedTest() {
   return (
     <div style={{ padding: 30, fontFamily: 'sans-serif' }}>
       <h1>Internet Speed Test</h1>
+      <label>Name:</label>
+      <input
+        type="text"
+        placeholder="Enter your name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        style={{ marginRight: 10 }}
+      />
+      <label>Location:</label>
+      <input
+        type="text"
+        placeholder="Enter your location (optional)"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        style={{ marginRight: 10 }}
+      />
       <button onClick={runTest} disabled={isRunning}>
         {isRunning ? 'Running...' : 'Run Test'}
       </button>
