@@ -5,6 +5,8 @@ export default function SpeedTest() {
   const [isRunning, setIsRunning] = useState(false);
   const [name, setName] = useState('Anonymous');
   const [location, setLocation] = useState('Unknown');
+  const [progressStep, setProgressStep] = useState('');
+
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -93,9 +95,13 @@ export default function SpeedTest() {
     setIsRunning(true);
     setResults(null);
     try {
+      setProgressStep('Measuring ping...');
       const ping = await measurePing();
+      setProgressStep('Testing Download speed...');
       const download = await measureDownload();
+      setProgressStep('Testing Upload speed...');
       const upload = await measureParallelUpload();
+      setProgressStep('Test complete!');
       setResults({ ping, download, upload });
 
       const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
@@ -113,6 +119,7 @@ export default function SpeedTest() {
       });
     } catch (e) {
       setResults({ error: e.toString() });
+      setProgressStep('Something went wrong.');
     }
     
     setIsRunning(false);
@@ -180,17 +187,49 @@ export default function SpeedTest() {
           {isRunning ? 'Running...' : 'Run Speed Test'}
         </button>
       </form>
+      {isRunning && (
+        <p style={{ fontStyle: 'italic', marginTop: 10 }}>{progressStep}</p>
+      )}
+
       
       {results && (
         <div style={{ marginTop: 20 }}>
           {results.error ? (
             <p style={{ color: 'red' }}>Error: {results.error}</p>
           ) : (
-            <ul>
-              <li><strong>Ping:</strong> {results.ping} ms</li>
-              <li><strong>Download:</strong> {results.download} Mbps</li>
-              <li><strong>Upload:</strong> {results.upload} Mbps</li>
-            </ul>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: 30,
+            }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '24px 32px',
+                borderRadius: '16px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                textAlign: 'center',
+                minWidth: '280px',
+                transition: 'transform 0.3s ease',
+                animation: 'fadeIn 0.5s ease-in-out',
+              }}>
+                <h2 style={{
+                  marginBottom: '16px',
+                  fontSize: '1.5rem',
+                  color: '#333',
+                }}>
+                  Test Results
+                </h2>
+                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                  <strong>Ping:</strong> {results.ping} ms
+                </div>
+                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                  <strong>Download:</strong> {results.download} Mbps
+                </div>
+                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                  <strong>Upload:</strong> {results.upload} Mbps
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
