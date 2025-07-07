@@ -121,26 +121,66 @@ export default function SpeedTest() {
   return (
     <div style={{ padding: 30, fontFamily: 'sans-serif' }}>
       <h1>Internet Speed Test</h1>
-      <label>Name:</label>
-      <input
-        type="text"
-        placeholder="Enter your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        style={{ marginRight: 10 }}
-      />
-      <label>Location:</label>
-      <input
-        type="text"
-        placeholder="Enter your location (optional)"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        style={{ marginRight: 10 }}
-      />
-      <button onClick={runTest} disabled={isRunning}>
-        {isRunning ? 'Running...' : 'Run Test'}
-      </button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          runTest();
+        }}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          maxWidth: '400px',
+          margin: '20px auto',
+        }}
+      >
+        <label style={{ fontWeight: 'bold' }}>Name <span style={{ color: 'red' }}>*</span></label>
+        <input
+          type="text"
+          placeholder="Enter your name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+          }}
+        />
+
+        <label style={{ fontWeight: 'bold' }}>Location</label>
+        <input
+          type="text"
+          placeholder="Enter your school/city (optional)"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+          }}
+        />
+
+        <button
+          type="submit"
+          disabled={isRunning}
+          style={{
+            marginTop: '10px',
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: 'none',
+            backgroundColor: '#007bff',
+            color: 'white',
+            cursor: isRunning ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {isRunning ? 'Running...' : 'Run Speed Test'}
+        </button>
+      </form>
+      
       {results && (
         <div style={{ marginTop: 20 }}>
           {results.error ? (

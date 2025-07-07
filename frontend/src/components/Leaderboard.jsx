@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import './leaderboard.css'; // Assuming you have a CSS file for styling
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -30,30 +31,32 @@ export default function Leaderboard() {
       ) : results.length === 0 ? (
         <p>No results yet.</p>
       ) : (
-        <table border="1" cellPadding="10" style={{ borderCollapse: 'collapse', marginTop: 20 }}>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Location</th>
-              <th>Ping (ms)</th>
-              <th>Download (Mbps)</th>
-              <th>Upload (Mbps)</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r, index) => (
-              <tr key={index}>
-                <td>{r.name}</td>
-                <td>{r.location}</td>
-                <td>{r.ping}</td>
-                <td>{r.download}</td>
-                <td>{r.upload}</td>
-                <td>{new Date(r.timestamp).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+         <div className="leaderboard-container">
+            <div className="table-wrapper">
+                <table className="leaderboard-table">
+                <thead>
+                    <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Ping (ms)</th>
+                    <th>Download (Mbps)</th>
+                    <th>Upload (Mbps)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {results.map((entry, i) => (
+                    <tr key={i}>
+                        <td>{entry.name}</td>
+                        <td>{entry.location}</td>
+                        <td>{entry.ping}</td>
+                        <td>{entry.download}</td>
+                        <td>{entry.upload}</td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+        </div>
       )}
     </div>
   );
