@@ -44,3 +44,29 @@
     font-size: 22px;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212;
+    color: #e0e0e0;
+  }
+
+  .table-wrapper {
+    background: #1e1e1e;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+  }
+
+  .leaderboard-table {
+    background-color: #1e1e1e;
+    color: #f0f0f0;
+  }
+
+  .leaderboard-table th {
+    background-color: #2a2a2a;
+    color: #ffffff;
+  }
+
+  .leaderboard-table tr:nth-child(even) {
+    background-color: #2a2a2a;
+  }
+}

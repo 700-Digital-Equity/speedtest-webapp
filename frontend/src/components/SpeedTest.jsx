@@ -6,6 +6,8 @@ export default function SpeedTest() {
   const [name, setName] = useState('Anonymous');
   const [location, setLocation] = useState('Unknown');
   const [progressStep, setProgressStep] = useState('');
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
 
 
   const SERVER = 'https://700-digital-equity.digital';
@@ -197,37 +199,34 @@ export default function SpeedTest() {
           {results.error ? (
             <p style={{ color: 'red' }}>Error: {results.error}</p>
           ) : (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginTop: 30,
-            }}>
-              <div style={{
-                backgroundColor: '#ffffff',
+
+
+            <div
+              style={{
+                backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+                color: isDarkMode ? '#f0f0f0' : '#333',
                 padding: '24px 32px',
                 borderRadius: '16px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                boxShadow: isDarkMode
+                  ? '0 4px 12px rgba(255, 255, 255, 0.05)'
+                  : '0 4px 12px rgba(0, 0, 0, 0.1)',
                 textAlign: 'center',
                 minWidth: '280px',
                 transition: 'transform 0.3s ease',
                 animation: 'fadeIn 0.5s ease-in-out',
-              }}>
-                <h2 style={{
-                  marginBottom: '16px',
-                  fontSize: '1.5rem',
-                  color: '#333',
-                }}>
-                  Test Results
-                </h2>
-                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                  <strong>Ping:</strong> {results.ping} ms
-                </div>
-                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                  <strong>Download:</strong> {results.download} Mbps
-                </div>
-                <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                  <strong>Upload:</strong> {results.upload} Mbps
-                </div>
+              }}
+            >
+              <h2 style={{ marginBottom: '16px', fontSize: '1.5rem' }}>
+                Test Results
+              </h2>
+              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                <strong>Ping:</strong> {results.ping} ms
+              </div>
+              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                <strong>Download:</strong> {results.download} Mbps
+              </div>
+              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
+                <strong>Upload:</strong> {results.upload} Mbps
               </div>
             </div>
           )}
