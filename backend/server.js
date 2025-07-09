@@ -6,7 +6,6 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
 
 const resultRoutes = require('./routes/results');
 const TestResult = require('./models/TestResult');
@@ -26,12 +25,6 @@ app.get('/results', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results' });
   }
 });
-
-app.post('/upload', (req, res) => {
-  req.on('data', () => {}); // Discard incoming data
-  req.on('end', () => res.status(200).send('OK'));
-});
-
 
 
 mongoose.connect(process.env.MONGO_URI)

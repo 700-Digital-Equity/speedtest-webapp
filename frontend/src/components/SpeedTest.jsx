@@ -100,29 +100,63 @@ const measurePing = async () => {
     const end = performance.now();
     const duration = (end - start) / 1000;
     return ((blob.size * 8) / duration / 1_000_000).toFixed(2); // Mbps
+  };
+
+  const measureParallelUpload = async (url = `${SERVER}/upload`, concurrency = 2) => {
+    const blobSizeMB = 50;
+    const blob = new Blob([new Uint8Array(blobSizeMB * 1024 * 1024)]); // 20MB blob
+    const warmupBlob = new Blob([new Uint8Array(1 * 1024 * 1024)]); // 1MB warmup
+
+    const fetchWithTimeout = (url, options, timeout = 10000) => {
+      return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
+      ]);
     };
 
-    const measureParallelUpload = async (url = `${SERVER}/upload`, concurrency = 4) => {
-  const blob = new Blob([new Uint8Array(10 * 1024 * 1024)]); // 10MB blob
-  const start = performance.now();
+    // Warm-up: small upload to stabilize connection
+    try {
+      await fetchWithTimeout(url, { method: 'POST', body: warmupBlob }, 3000);
+    } catch (_) {
+      // ignore warmup failure
+    }
 
-  // Start multiple uploads in parallel
-  const uploads = new Array(concurrency).fill(null).map(() =>
-    fetch(url, {
-      method: 'POST',
-      body: blob,
-    })
-  );
+    const uploadTimes = [];
 
-  // Wait for all uploads to complete
-  await Promise.all(uploads);
+    const uploads = new Array(concurrency).fill(null).map(async () => {
+      const start = performance.now();
+      try {
+        const res = await fetchWithTimeout(url, {
+          method: 'POST',
+          body: blob
+        }, 15000);
+        if (res.ok) {
+          const end = performance.now();
+          uploadTimes.push((end - start) / 1000); // in seconds
+        }
+      } catch (err) {
+        // timeout or fetch error, ignore
+      }
+    });
 
-  const end = performance.now();
-  const duration = (end - start) / 1000; // seconds
+    await Promise.all(uploads);
 
-  // Total bytes uploaded = concurrency * blob.size
-  return (((blob.size * concurrency) * 8) / duration / 1_000_000).toFixed(2); // Mbps
-};
+    if (uploadTimes.length === 0) return "0";
+
+    // Remove outliers
+    const trimmedTimes = removeOutliers(uploadTimes);
+
+    const averageTime = trimmedTimes.reduce((a, b) => a + b, 0) / trimmedTimes.length;
+    const totalBitsUploaded = blob.size * trimmedTimes.length * 8;
+
+    return (totalBitsUploaded / averageTime / 1_000_000).toFixed(2); // Mbps
+  };
+
+  const removeOutliers = (arr) => {
+    if (arr.length <= 2) return arr;
+    const sorted = [...arr].sort((a, b) => a - b);
+    return sorted.slice(1, -1); // remove min and max
+  };
 
   const runTest = async () => {
     setIsRunning(true);
@@ -134,7 +168,6 @@ const measurePing = async () => {
       await warmUpDownload(); // Warm up to avoid cache effects
       const download = await measureDownload();
       setProgressStep('Testing Upload speed...');
-      await warmUpUpload(); // Warm up to avoid cache effect
       const upload = await measureParallelUpload();
       setProgressStep('Test complete!');
       setResults({ ping, download, upload });
