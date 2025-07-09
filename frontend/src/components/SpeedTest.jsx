@@ -13,17 +13,41 @@ export default function SpeedTest() {
   const SERVER = 'https://700-digital-equity.digital';
 
   // Measure ping
-  const measurePing = async () => {
-    const times = [];
-    for (let i = 0; i < 5; i++) {
-      const start = performance.now();
+  const median = arr => {
+  const mid = Math.floor(arr.length / 2);
+  const sorted = [...arr].sort((a, b) => a - b);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+
+const measurePing = async () => {
+  const times = [];
+
+  for (let i = 0; i < 7; i++) {
+    const start = performance.now();
+    try {
       await fetch(`${SERVER}/ping.json?t=${Date.now()}`);
       const end = performance.now();
       times.push(end - start);
+    } catch {
+      times.push(999);
     }
-    return (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
-  };
+  }
 
+  return median(times).toFixed(2);
+};
+
+  const warmUpDownload = async () => {
+  const res = await fetch(`${SERVER}/100MB.bin?warmup=${Math.random()}`);
+  const reader = res.body.getReader();
+  const start = performance.now();
+  while (performance.now() - start < 2000) {
+    const { done } = await reader.read();
+    if (done) break;
+  }
+  reader.cancel();
+};
   // Improved Download Test: multiple parallel requests over a fixed duration
   const measureDownload = async () => {
     const url = `${SERVER}/100MB.bin`;
@@ -57,6 +81,13 @@ export default function SpeedTest() {
     return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
   };
 
+  const warmUpUpload = async () => {
+    const warmupBlob = new Blob([new Uint8Array(1 * 1024 * 1024)]); // 1MB
+    await fetch(`${SERVER}/upload`, {
+      method: 'POST',
+      body: warmupBlob,
+    });
+  };
   const measureUpload = async () => {
     const blob = new Blob([new Uint8Array(20 * 1024 * 1024)]); // 20MB
     const start = performance.now();
@@ -100,8 +131,10 @@ export default function SpeedTest() {
       setProgressStep('Measuring ping...');
       const ping = await measurePing();
       setProgressStep('Testing Download speed...');
+      await warmUpDownload(); // Warm up to avoid cache effects
       const download = await measureDownload();
       setProgressStep('Testing Upload speed...');
+      await warmUpUpload(); // Warm up to avoid cache effect
       const upload = await measureParallelUpload();
       setProgressStep('Test complete!');
       setResults({ ping, download, upload });
