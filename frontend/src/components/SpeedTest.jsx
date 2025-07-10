@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -7,7 +7,7 @@ export default function SpeedTest() {
   const [location, setLocation] = useState('Unknown');
   const [progressStep, setProgressStep] = useState('');
   const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
+  
 
 
   const SERVER = 'https://700-digital-equity.digital';
@@ -38,16 +38,16 @@ const measurePing = async () => {
   return median(times).toFixed(2);
 };
 
-  const warmUpDownload = async () => {
-  const res = await fetch(`${SERVER}/100MB.bin?warmup=${Math.random()}`);
-  const reader = res.body.getReader();
-  const start = performance.now();
-  while (performance.now() - start < 2000) {
-    const { done } = await reader.read();
-    if (done) break;
-  }
-  reader.cancel();
-};
+//   const warmUpDownload = async () => {
+//   const res = await fetch(`${SERVER}/100MB.bin?warmup=${Math.random()}`);
+//   const reader = res.body.getReader();
+//   const start = performance.now();
+//   while (performance.now() - start < 2000) {
+//     const { done } = await reader.read();
+//     if (done) break;
+//   }
+//   reader.cancel();
+// };
   // Improved Download Test: multiple parallel requests over a fixed duration
   const measureDownload = async () => {
     const url = `${SERVER}/100MB.bin`;
@@ -182,9 +182,11 @@ const removeOutliers = (arr) => {
       const ping = await measurePing();
       setProgressStep('Testing Download speed...');
       await warmUpDownload(); // Warm up to avoid cache effects
-      const download = await measureDownload();
+      // const download = await measureDownload();
+      const download = await adaptiveDownload();
       setProgressStep('Testing Upload speed...');
-      const upload = await measureParallelUpload();
+      // const upload = await measureParallelUpload();
+      const upload = await adaptiveUpload();
       setProgressStep('Test complete!');
       setResults({ ping, download, upload });
 
