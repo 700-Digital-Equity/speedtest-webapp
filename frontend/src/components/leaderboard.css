@@ -1,8 +1,9 @@
 .leaderboard-container {
-  max-width: 90%;
+  max-width: 100%;
   margin: 40px auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
+  overflow-x: auto;
 }
 
 .table-wrapper {
@@ -10,7 +11,6 @@
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
 }
 
 .leaderboard-table {
@@ -20,7 +20,8 @@
 
 .leaderboard-table th,
 .leaderboard-table td {
-  padding: 12px 16px;
+  padding: 8px;
+  text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
@@ -36,8 +37,12 @@
 @media (max-width: 600px) {
   .leaderboard-table th,
   .leaderboard-table td {
-    padding: 10px;
-    font-size: 14px;
+    padding: 4px;
+    font-size: 12px;
+  }
+
+  .pagination {
+    font-size: 12px;
   }
 
   .leaderboard-container h1 {
