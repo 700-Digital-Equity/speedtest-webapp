@@ -13,7 +13,7 @@ const warmUpDownload = async () => {
 
 
 const adaptiveDownload = async () => {
-  const concurrency = 2;
+  const concurrency = 4;
   const url = `${SERVER}/100MB.bin`;
   const startTime = performance.now();
   const maxDuration = 15000; // stop after 15s
@@ -52,18 +52,18 @@ const adaptiveDownload = async () => {
 
 const adaptiveUpload = async ({
   serverUrl = `${SERVER}/upload`,
-  maxDuration = 10000,
-  initialSizeMB = 40,
+  maxDuration = 15000,
+  initialSizeMB = 30,
   maxBlobSizeMB = 500,
   maxConcurrency = 8,
-  timeThreshold = 5 // seconds — if upload is faster than this, increase load
+  timeThreshold = 4 // seconds — if upload is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytesUploaded = 0;
   let totalUploadTime = 0;
 
   let currentBlobSizeMB = initialSizeMB;
-  let concurrency = 1;
+  let concurrency = 3;
 
   const createBlob = (sizeMB) => new Blob([new Uint8Array(sizeMB * 1024 * 1024)]);
 
