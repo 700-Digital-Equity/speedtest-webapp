@@ -70,6 +70,7 @@ export default function Leaderboard() {
                   <th onClick={() => handleSort('ping')}>Ping (ms)</th>
                   <th onClick={() => handleSort('download')}>Download (Mbps)</th>
                   <th onClick={() => handleSort('upload')}>Upload (Mbps)</th>
+                  <th onClick={() => handleSort('timestamp')}>Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,6 +81,7 @@ export default function Leaderboard() {
                     <td>{entry.ping}</td>
                     <td>{entry.download}</td>
                     <td>{entry.upload}</td>
+                    <td>{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</td>
                   </tr>
                 ))}
               </tbody>
