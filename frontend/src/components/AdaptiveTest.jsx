@@ -53,7 +53,7 @@ const adaptiveDownload = async () => {
 const adaptiveUpload = async ({
   serverUrl = `${SERVER}/upload`,
   maxDuration = 15000,
-  initialSizeMB = 30,
+  initialSizeMB = 40,
   maxBlobSizeMB = 500,
   maxConcurrency = 8,
   timeThreshold = 4.5 // seconds — if upload is faster than this, increase load
@@ -63,8 +63,7 @@ const adaptiveUpload = async ({
   let totalUploadTime = 0;
 
   let currentBlobSizeMB = initialSizeMB;
-  let concurrency = 3;
-
+  let concurrency = 2;
   const createBlob = (sizeMB) => new Blob([new Uint8Array(sizeMB * 1024 * 1024)]);
 
   const fetchWithTimeout = (url, options, timeout = 12000) =>

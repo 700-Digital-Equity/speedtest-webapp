@@ -9,6 +9,7 @@ function App() {
             <nav style={{ padding: 20 }}>
                 <Link to="/" style={{ marginRight: 20 }}>Speed Test</Link>
                 <Link to="/leaderboard">Comparison</Link>
+                <Link to='/about'> About Us</Link>
             </nav>
             <Routes>
                 <Route path="/" element={<SpeedTest />} />
