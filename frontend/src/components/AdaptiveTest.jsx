@@ -56,7 +56,7 @@ const adaptiveUpload = async ({
   initialSizeMB = 30,
   maxBlobSizeMB = 500,
   maxConcurrency = 8,
-  timeThreshold = 4 // seconds — if upload is faster than this, increase load
+  timeThreshold = 4.5 // seconds — if upload is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytesUploaded = 0;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PastResultsModal from './PastResults.jsx';
 import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
@@ -7,7 +8,7 @@ export default function SpeedTest() {
   const [location, setLocation] = useState('Unknown');
   const [progressStep, setProgressStep] = useState('');
   const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
+  const [showPast, setShowPast] = useState(false);
 
 
   const SERVER = 'https://700-digital-equity.digital';
@@ -203,6 +204,16 @@ const removeOutliers = (arr) => {
           upload,
         }),
       });
+      const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+        pastResults.unshift({
+          timestamp: new Date().toISOString(),
+          name,
+          location,
+          ping,
+          download,
+          upload,
+        });
+        localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10))); // keep last 10
     } catch (e) {
       setResults({ error: e.toString() });
       setProgressStep('Something went wrong.');
@@ -214,6 +225,23 @@ const removeOutliers = (arr) => {
   return (
     <div style={{ padding: 30, fontFamily: 'sans-serif' }}>
       <h1>Internet Speed Test</h1>
+      <button
+        type="button"
+        onClick={() => setShowPast(true)}
+        style={{
+          margin: '10px 0',
+          padding: '8px 16px',
+          borderRadius: '5px',
+          border: '1px solid #007bff',
+          background: '#fff',
+          color: '#007bff',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        View Past Results
+      </button>
+      <PastResultsModal open={showPast} onClose={() => setShowPast(false)} />
       <form
         onSubmit={(e) => {
           e.preventDefault();
