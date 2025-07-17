@@ -9,44 +9,58 @@ const warmUpDownload = async () => {
   reader.cancel();
 };
 
-  const SERVER = 'https://700-digital-equity.digital';
+const SERVER = 'https://700-digital-equity.digital';
 
-
-const adaptiveDownload = async () => {
-  const concurrency = 4;
-  const url = `${SERVER}/100MB.bin`;
+const adaptiveDownload = async ({
+  serverUrl = `${SERVER}/100MB.bin`,
+  maxDuration = 15000,
+  initialConcurrency = 2,
+  maxConcurrency = 8,
+  timeThreshold = 4.5 // seconds — if download is faster than this, increase load
+} = {}) => {
   const startTime = performance.now();
-  const maxDuration = 15000; // stop after 15s
-
   let totalBytes = 0;
   let isStopped = false;
+  let concurrency = initialConcurrency;
 
   const download = async () => {
     while (!isStopped) {
       try {
-        const res = await fetch(`${url}?adaptive=${Math.random()}`);
+        const res = await fetch(`${serverUrl}?adaptive=${Math.random()}`);
         const reader = res.body.getReader();
         while (!isStopped) {
           const { done, value } = await reader.read();
           if (done) break;
           totalBytes += value.length;
 
-          // Stop if we’ve hit time limit
+          // Stop if we’ve hit the time limit
           if (performance.now() - startTime > maxDuration) {
             isStopped = true;
             break;
           }
         }
       } catch (_) {
-        break; // error or abort
+        break; // Ignore errors
       }
     }
   };
 
   const downloads = Array(concurrency).fill(0).map(download);
-  await Promise.all(downloads);
-  const duration = (performance.now() - startTime) / 1000;
 
+  while (!isStopped) {
+    const roundStart = performance.now();
+    await Promise.all(downloads);
+    const roundDuration = (performance.now() - roundStart) / 1000;
+
+    // Adjust concurrency dynamically
+    if (roundDuration < timeThreshold && concurrency < maxConcurrency) {
+      concurrency++;
+    } else if (roundDuration > timeThreshold && concurrency > 1) {
+      concurrency--;
+    }
+  }
+
+  const duration = (performance.now() - startTime) / 1000;
   return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
 };
 
@@ -161,7 +175,7 @@ const streamedUpload = async ({
       headers: {
         'Content-Type': 'application/octet-stream'
       },
-      duplex: 'half' 
+      duplex: 'half'
     });
 
     const durationSeconds = (performance.now() - startTime) / 1000;
@@ -172,7 +186,5 @@ const streamedUpload = async ({
     return "0";
   }
 };
-
-
 
 export {adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload};
