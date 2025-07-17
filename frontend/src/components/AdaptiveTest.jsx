@@ -13,7 +13,7 @@ const SERVER = 'https://700-digital-equity.digital';
 
 const adaptiveDownload = async ({
   serverUrl = `${SERVER}/100MB.bin`,
-  maxDuration = 18000,
+  maxDuration = 20000,
   initialConcurrency = 4,
   maxConcurrency = 8,
   timeThreshold = 12 // seconds — if download is faster than this, increase load
