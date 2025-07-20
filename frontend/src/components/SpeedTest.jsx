@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PastResultsModal from './PastResults.jsx';
 import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
+
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -10,6 +11,11 @@ export default function SpeedTest() {
   const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const [showPast, setShowPast] = useState(false);
 
+  // New state for device type, connection type, custom connection, and notes
+  const [deviceType, setDeviceType] = useState('');
+  const [connectionType, setConnectionType] = useState('');
+  const [customConnectionType, setCustomConnectionType] = useState('');
+  const [notes, setNotes] = useState('');
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -182,16 +188,16 @@ const removeOutliers = (arr) => {
       setProgressStep('Measuring ping...');
       const ping = await measurePing();
       setProgressStep('Testing Download speed...');
-      await warmUpDownload(); // Warm up to avoid cache effects
-      // const download = await measureDownload();
+      await warmUpDownload();
       const download = await adaptiveDownload();
       setProgressStep('Testing Upload speed...');
-      // const upload = await measureParallelUpload();
       const upload = await adaptiveUpload();
       setProgressStep('Test complete!');
       setResults({ ping, download, upload });
 
       const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+      // Use custom connection type if "Other" is selected
+      const finalConnectionType = connectionType === "Other" ? customConnectionType : connectionType;
       await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -202,23 +208,28 @@ const removeOutliers = (arr) => {
           ping,
           download,
           upload,
+          deviceType,
+          connectionType: finalConnectionType,
+          notes
         }),
       });
       const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
-        pastResults.unshift({
-          timestamp: new Date().toISOString(),
-          name,
-          location,
-          ping,
-          download,
-          upload,
-        });
-        localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10))); // keep last 10
+      pastResults.unshift({
+        timestamp: new Date().toISOString(),
+        name,
+        location,
+        ping,
+        download,
+        upload,
+        deviceType,
+        connectionType: finalConnectionType,
+        notes
+      });
+      localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
     } catch (e) {
       setResults({ error: e.toString() });
       setProgressStep('Something went wrong.');
     }
-    
     setIsRunning(false);
   };
 
@@ -284,6 +295,69 @@ const removeOutliers = (arr) => {
           }}
         />
 
+        {/* Device Model */}
+        <label style={{ fontWeight: 'bold' }}>Device Model</label>
+        <input
+          type="text"
+          placeholder="e.g. MacBook Pro, Galaxy S23"
+          value={deviceType}
+          onChange={e => setDeviceType(e.target.value)}
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+          }}
+        />
+
+        {/* Connection Type */}
+        <label style={{ fontWeight: 'bold' }}>Connection Type</label>
+        <select
+          value={connectionType}
+          onChange={e => setConnectionType(e.target.value)}
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+          }}
+        >
+          <option value="">Select connection</option>
+          <option value="WiFi">WiFi</option>
+          <option value="Ethernet">Ethernet</option>
+          <option value="Mobile data">Mobile data</option>
+          <option value="Other">Other (type below)</option>
+        </select>
+        {connectionType === "Other" && (
+          <input
+            type="text"
+            value={customConnectionType}
+            onChange={e => setCustomConnectionType(e.target.value)}
+            placeholder="Describe your connection"
+            style={{
+              padding: '10px',
+              fontSize: '16px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+            }}
+          />
+        )}
+
+        {/* Notes */}
+        <label style={{ fontWeight: 'bold' }}>Notes</label>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Any notes about your test or setup?"
+          style={{
+            padding: '10px',
+            fontSize: '16px',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+            minHeight: '60px',
+          }}
+        />
+
         <button
           type="submit"
           disabled={isRunning}
@@ -305,14 +379,11 @@ const removeOutliers = (arr) => {
         <p style={{ fontStyle: 'italic', marginTop: 10 }}>{progressStep}</p>
       )}
 
-      
       {results && (
         <div style={{ marginTop: 20 }}>
           {results.error ? (
             <p style={{ color: 'red' }}>Error: {results.error}</p>
           ) : (
-
-
             <div
               style={{
                 backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
@@ -340,6 +411,17 @@ const removeOutliers = (arr) => {
               <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
                 <strong>Upload:</strong> {results.upload} Mbps
               </div>
+              <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
+                <strong>Device:</strong> {deviceType}
+              </div>
+              <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
+                <strong>Connection:</strong> {connectionType === "Other" ? customConnectionType : connectionType}
+              </div>
+              {notes && (
+                <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
+                  <strong>Notes:</strong> {notes}
+                </div>
+              )}
             </div>
           )}
         </div>
