@@ -14,19 +14,20 @@ const SERVER = 'https://700-digital-equity.digital';
 const adaptiveDownload = async ({
   maxDuration = 20000,
   initialConcurrency = 4,
-  maxConcurrency = 8,
-  timeThreshold = 8 // seconds — if download is faster than this, increase load
+  maxConcurrency = 12,
+  timeThreshold = 15 // seconds — if download is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytes = 0;
   let concurrency = initialConcurrency;
-  let useSmallFile = true; // Start with 10MB file
+  // Use a variable to track which file size to use: 10, 100, or 250
+  let fileSize = 10; // Start with 10MB
   let stopAll = false;
 
   while (!stopAll && (performance.now() - startTime) < maxDuration) {
     const download = async () => {
       try {
-        const currentUrl = useSmallFile ? `${SERVER}/10MB.bin` : `${SERVER}/100MB.bin`;
+        const currentUrl = `${SERVER}/${fileSize}MB.bin`;
         const res = await fetch(`${currentUrl}?adaptive=${Math.random()}`);
         const reader = res.body.getReader();
         while (!stopAll) {
@@ -59,13 +60,19 @@ const adaptiveDownload = async ({
       if (concurrency < maxConcurrency) {
         concurrency++;
         console.log(`Increased concurrency to ${concurrency}`);
-      } else if (useSmallFile) {
-        useSmallFile = false;
+      } else if (fileSize === 10) {
+        fileSize = 100;
         console.log(`Switched to 100MB file for better saturation`);
+      } else if (fileSize === 100) {
+        fileSize = 250;
+        console.log(`Switched to 250MB file for even better saturation`);
       }
     } else if (roundDuration > timeThreshold) {
-      if (!useSmallFile) {
-        useSmallFile = true;
+      if (fileSize === 250) {
+        fileSize = 100;
+        console.log(`Switched back to 100MB file`);
+      } else if (fileSize === 100) {
+        fileSize = 10;
         console.log(`Switched back to 10MB file`);
       } else if (concurrency > 1) {
         concurrency--;
@@ -83,8 +90,8 @@ const adaptiveUpload = async ({
   maxDuration = 18000,
   initialSizeMB = 25,
   maxBlobSizeMB = 500,
-  maxConcurrency = 8,
-  timeThreshold = 8 // seconds — if upload is faster than this, increase load
+  maxConcurrency = 16,
+  timeThreshold = 15 // seconds — if upload is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytesUploaded = 0;
