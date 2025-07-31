@@ -15,102 +15,65 @@ const adaptiveDownload = async ({
   maxDuration = 20000,
   initialConcurrency = 4,
   maxConcurrency = 8,
-  timeThreshold = 12 // seconds — if download is faster than this, increase load
+  timeThreshold = 8 // seconds — if download is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytes = 0;
-  let isStopped = false;
   let concurrency = initialConcurrency;
   let useSmallFile = true; // Start with 10MB file
+  let stopAll = false;
 
-  const getCurrentUrl = () => {
-    return useSmallFile ? `${SERVER}/10MB.bin` : `${SERVER}/100MB.bin`;
-  };
-
-  const download = async () => {
-    while (!isStopped) {
+  while (!stopAll && (performance.now() - startTime) < maxDuration) {
+    const download = async () => {
       try {
-        const currentUrl = getCurrentUrl();
+        const currentUrl = useSmallFile ? `${SERVER}/10MB.bin` : `${SERVER}/100MB.bin`;
         const res = await fetch(`${currentUrl}?adaptive=${Math.random()}`);
         const reader = res.body.getReader();
-        while (!isStopped) {
+        while (!stopAll) {
           const { done, value } = await reader.read();
           if (done) break;
           totalBytes += value.length;
-
-          // Check time limit on every chunk read
           if (performance.now() - startTime > maxDuration) {
-            isStopped = true;
+            stopAll = true;
             break;
           }
         }
       } catch (_) {
-        break; // Ignore errors
+        // Ignore errors
       }
-    }
-  };
+    };
 
-  let downloads = Array(concurrency).fill(0).map(download);
-
-  while (!isStopped && (performance.now() - startTime) < maxDuration) {
+    const downloads = Array(concurrency).fill(0).map(() => download());
     const roundStart = performance.now();
     await Promise.all(downloads);
     const roundDuration = (performance.now() - roundStart) / 1000;
 
-    // Check time limit after each round
+    // If time is up, break out of the main loop immediately
     if (performance.now() - startTime >= maxDuration) {
-      isStopped = true;
+      stopAll = true;
       break;
     }
 
-    let needsRestart = false;
-
-    // Adjust concurrency and file size dynamically
+    // Adjust concurrency and file size dynamically for next round
     if (roundDuration < timeThreshold) {
       if (concurrency < maxConcurrency) {
         concurrency++;
-        needsRestart = true;
         console.log(`Increased concurrency to ${concurrency}`);
       } else if (useSmallFile) {
-        // If we're at max concurrency and still fast, switch to larger file
         useSmallFile = false;
-        needsRestart = true;
         console.log(`Switched to 100MB file for better saturation`);
       }
     } else if (roundDuration > timeThreshold) {
       if (!useSmallFile) {
-        // If using large file and it's too slow, switch back to small file
         useSmallFile = true;
-        needsRestart = true;
         console.log(`Switched back to 10MB file`);
       } else if (concurrency > 1) {
-        // If using small file and still slow, reduce concurrency
         concurrency--;
-        needsRestart = true;
         console.log(`Decreased concurrency to ${concurrency}`);
       }
     }
-
-    // Restart downloads if concurrency or file size changed
-    if (needsRestart && !isStopped) {
-      // Stop current downloads
-      isStopped = true;
-      await Promise.all(downloads);
-      
-      // Check time limit before restarting
-      if (performance.now() - startTime >= maxDuration) {
-        break;
-      }
-      
-      // Reset and create new downloads
-      isStopped = false;
-      downloads = Array(concurrency).fill(0).map(download);
-    }
   }
 
-  // Ensure everything stops
-  isStopped = true;
-  
   const duration = (performance.now() - startTime) / 1000;
   return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
 };
