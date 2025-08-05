@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getISPInfo, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
-import style from '../styles/SpeedTestForm.module.css';
+import style from '../styles/speedtestform.module.css';
 import platform from 'platform';
 export default function SpeedTestForm({ isRunning, onSubmit }) {
   const info = platform;
