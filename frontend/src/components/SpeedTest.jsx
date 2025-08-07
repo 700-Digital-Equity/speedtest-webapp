@@ -18,6 +18,9 @@ export default function SpeedTest() {
   const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
   const [notes, setNotes] = useState('');
+  const [geo, setGeo] = useState('');
+  const [isp, setISP] = useState('');
+  const [browser, setBrowser] = useState('');
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -53,17 +56,24 @@ const measurePing = async () => {
     try {
       setProgressStep('Measuring ping...');
       const ping = await measurePing();
+
+      // Jitter & packet loss
+      const pingStats = await pingTest(`${SERVER}/ping.json`);
+      const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
+      const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
+
       setProgressStep('Testing Download speed...');
       await warmUpDownload();
       const download = await adaptiveDownload();
       setProgressStep('Testing Upload speed...');
       const upload = await adaptiveUpload();
       setProgressStep('Test complete!');
-      setResults({ ping, download, upload });
+
+      setResults({ ping, jitter, packetLoss, download, upload });
 
       const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-      // Use custom connection type if "Other" is selected
       const finalConnectionType = connectionType === "Other" ? customConnectionType : connectionType;
+
       await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,39 +82,45 @@ const measurePing = async () => {
           name,
           location,
           ping,
+          jitter,
+          packetLoss,
           download,
           upload,
           deviceType,
           connectionType: finalConnectionType,
+          geo,
+          isp,
+          browser,
           notes
+
         }),
       });
+
       const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
       pastResults.unshift({
         timestamp: new Date().toISOString(),
         name,
         location,
         ping,
+        jitter,
+        packetLoss,
         download,
         upload,
         deviceType,
         connectionType: finalConnectionType,
+        geo,
+        isp,
+        browser,
         notes
       });
       localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
+
       // ISP info
       getISPInfo().then(console.log);
 
-      // Jitter & packet loss
-      pingTest('https://700-digital-equity.digital/ping.json').then(console.log);
-
-      // Location
+      // Location, device, connection info (optional logs)
       getBrowserLocation().then(console.log).catch(console.error);
-
-      // Device info
       console.log(getDeviceInfo());
-
-      // Connection info
       console.log(getConnectionInfo());
     } catch (e) {
       setResults({ error: e.toString() });
@@ -126,6 +142,9 @@ const measurePing = async () => {
     setDeviceType(formData.deviceType);
     setConnectionType(formData.connectionType);
     setNotes(formData.notes);
+    setGeo(formData.geo);
+    setISP(formData.isp);
+    setBrowser(formData.browser);
     // ...and so on
     runTest(); // or pass formData to runTest if you refactor it
   }}

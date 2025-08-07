@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function TestResultsZone({ results, name, location, deviceType, connectionType}) {
+export default function TestResultsZone({ results, name, location, deviceType, connectionType }) {
   if (!results) return null;
 
   if (results.error) {
@@ -28,9 +28,10 @@ export default function TestResultsZone({ results, name, location, deviceType, c
       <div><strong>Connection:</strong> {connectionType}</div>
       <hr style={{ margin: '16px 0', borderColor: '#444' }} />
       <div><strong>Ping:</strong> {results.ping} ms</div>
+      <div><strong>Jitter:</strong> {results.jitter !== undefined ? results.jitter.toFixed(2) + ' ms' : 'N/A'}</div>
+      <div><strong>Packet Loss:</strong> {results.packetLoss !== undefined ? results.packetLoss.toFixed(1) + ' %' : 'N/A'}</div>
       <div><strong>Download:</strong> {results.download} Mbps</div>
       <div><strong>Upload:</strong> {results.upload} Mbps</div>
-      {/* Add more fields as needed, e.g. jitter, packet loss */}
     </div>
   );
 }

@@ -7,10 +7,17 @@ const resultSchema = new mongoose.Schema({
   download: Number,
   upload: Number,
   location: String,
-  timestamp: { type: Date, default: Date.now },
+  jitter: Number,
+  packetLoss: Number,
+  geo: Object,              
+  isp: String,
   deviceType: String,             
   connectionType: String,       
-  notes: String           
+  notes: String,    
+  timestamp: { type: Date, default: Date.now },
+ 
+        
+
 });
 
 module.exports = mongoose.model('Result', resultSchema);
