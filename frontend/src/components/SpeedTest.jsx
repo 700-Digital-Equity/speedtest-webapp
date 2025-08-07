@@ -3,6 +3,7 @@ import PastResultsModal from './PastResults.jsx';
 import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
 import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
 import SpeedTestForm from './SpeedTestForm.jsx';
+import TestResultsZone from './TestResultZone.jsx';
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -113,6 +114,7 @@ const measurePing = async () => {
   };
 
   return (
+    <>
     <SpeedTestForm
   isRunning={isRunning}
   onSubmit={async (formData) => {
@@ -128,5 +130,15 @@ const measurePing = async () => {
     runTest(); // or pass formData to runTest if you refactor it
   }}
 />
+  <TestResultsZone
+    results={results}
+    name={name}
+    location={location}
+    deviceType={deviceType}
+    connectionType={connectionType}
+
+    />
+
+    </>
   );
 }
