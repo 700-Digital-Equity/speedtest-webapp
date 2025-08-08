@@ -1,4 +1,4 @@
-.leaderboard-container {
+.leaderboardContainer {
   max-width: 100%;
   margin: 40px auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -6,37 +6,44 @@
   overflow-x: auto;
 }
 
-.table-wrapper {
+.tableWrapper {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.leaderboard-table {
+.leaderboardTable {
   width: 100%;
   border-collapse: collapse;
 }
 
-.leaderboard-table th,
-.leaderboard-table td {
+.leaderboardTable th,
+.leaderboardTable td {
   padding: 8px;
   text-align: left;
   border-bottom: 1px solid #ddd;
 }
 
-.leaderboard-table th {
+.leaderboardTable th {
   background-color: #f1f3f5;
   font-weight: bold;
 }
 
-.leaderboard-table tr:nth-child(even) {
+.leaderboardTable tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
+.pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
 @media (max-width: 600px) {
-  .leaderboard-table th,
-  .leaderboard-table td {
+  .leaderboardTable th,
+  .leaderboardTable td {
     padding: 4px;
     font-size: 12px;
   }
@@ -45,7 +52,7 @@
     font-size: 12px;
   }
 
-  .leaderboard-container h1 {
+  .leaderboardContainer h1 {
     font-size: 22px;
   }
 }
@@ -56,22 +63,22 @@
     color: #e0e0e0;
   }
 
-  .table-wrapper {
+  .tableWrapper {
     background: #1e1e1e;
     box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
   }
 
-  .leaderboard-table {
+  .leaderboardTable {
     background-color: #1e1e1e;
     color: #f0f0f0;
   }
 
-  .leaderboard-table th {
+  .leaderboardTable th {
     background-color: #2a2a2a;
     color: #ffffff;
   }
 
-  .leaderboard-table tr:nth-child(even) {
+  .leaderboardTable tr:nth-child(even) {
     background-color: #2a2a2a;
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './leaderboard.css';
+import styles from '../styles/leaderboard.module.css';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -53,41 +53,39 @@ export default function Leaderboard() {
   const totalPages = Math.ceil(total / pageSize);
 
   return (
-    <div style={{ padding: 30, fontFamily: 'sans-serif' }}>
+    <div className={styles.leaderboardContainer}>
       <h1>Leaderboard</h1>
       {loading ? (
         <p>Loading...</p>
       ) : sortedResults.length === 0 ? (
         <p>No results yet.</p>
       ) : (
-        <div className="leaderboard-container">
-          <div className="table-wrapper">
-            <table className="leaderboard-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('name')}>Name</th>
-                  <th onClick={() => handleSort('location')}>Location</th>
-                  <th onClick={() => handleSort('ping')}>Ping (ms)</th>
-                  <th onClick={() => handleSort('download')}>Download (Mbps)</th>
-                  <th onClick={() => handleSort('upload')}>Upload (Mbps)</th>
-                  <th onClick={() => handleSort('timestamp')}>Time</th>
+        <div className={styles.tableWrapper}>
+          <table className={styles.leaderboardTable}>
+            <thead>
+              <tr>
+                <th onClick={() => handleSort('name')}>Name</th>
+                <th onClick={() => handleSort('location')}>Location</th>
+                <th onClick={() => handleSort('ping')}>Ping (ms)</th>
+                <th onClick={() => handleSort('download')}>Download (Mbps)</th>
+                <th onClick={() => handleSort('upload')}>Upload (Mbps)</th>
+                <th onClick={() => handleSort('timestamp')}>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((entry, i) => (
+                <tr key={i}>
+                  <td>{entry.name}</td>
+                  <td>{entry.location}</td>
+                  <td>{entry.ping}</td>
+                  <td>{entry.download}</td>
+                  <td>{entry.upload}</td>
+                  <td>{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {results.map((entry, i) => (
-                  <tr key={i}>
-                    <td>{entry.name}</td>
-                    <td>{entry.location}</td>
-                    <td>{entry.ping}</td>
-                    <td>{entry.download}</td>
-                    <td>{entry.upload}</td>
-                    <td>{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="pagination">
+              ))}
+            </tbody>
+          </table>
+          <div className={styles.pagination}>
             <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
             <span>Page {page} of {totalPages}</span>
             <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
