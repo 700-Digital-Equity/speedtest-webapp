@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../styles/leaderboard.module.css';
+import PracticeGraph from '../graphs/PracticeGraph';
+import { LeaderboardTable } from './LeaderboardTable';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -61,34 +63,16 @@ export default function Leaderboard() {
         <p>No results yet.</p>
       ) : (
         <div className={styles.tableWrapper}>
-          <table className={styles.leaderboardTable}>
-            <thead>
-              <tr>
-                <th onClick={() => handleSort('name')}>Name</th>
-                <th onClick={() => handleSort('location')}>Location</th>
-                <th onClick={() => handleSort('ping')}>Ping (ms)</th>
-                <th onClick={() => handleSort('download')}>Download (Mbps)</th>
-                <th onClick={() => handleSort('upload')}>Upload (Mbps)</th>
-                <th onClick={() => handleSort('timestamp')}>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((entry, i) => (
-                <tr key={i}>
-                  <td>{entry.name}</td>
-                  <td>{entry.location}</td>
-                  <td>{entry.ping}</td>
-                  <td>{entry.download}</td>
-                  <td>{entry.upload}</td>
-                  <td>{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <LeaderboardTable results={sortedResults}/>
+
           <div className={styles.pagination}>
             <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
             <span>Page {page} of {totalPages}</span>
             <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
+          </div>
+
+          <div className={styles.graphBar}>
+            <PracticeGraph results={sortedResults} />
           </div>
         </div>
       )}
