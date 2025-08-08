@@ -131,24 +131,27 @@ const measurePing = async () => {
 
   return (
     <>
+    <button className='past-results-button' onClick={() => setShowPast(true)}>
+      View Past Results
+    </button>
     <SpeedTestForm
-  isRunning={isRunning}
-  onSubmit={async (formData) => {
-    // formData contains all fields, including auto-populated ones
-    // You can use these in your runTest logic
-    // Example:
-    setName(formData.name);
-    setLocation(formData.location);
-    setDeviceType(formData.deviceType);
-    setConnectionType(formData.connectionType);
-    setNotes(formData.notes);
-    setGeo(formData.geo);
-    setISP(formData.isp);
-    setBrowser(formData.browser);
-    // ...and so on
-    runTest(); // or pass formData to runTest if you refactor it
-  }}
-/>
+      isRunning={isRunning}
+      onSubmit={async (formData) => {
+        // formData contains all fields, including auto-populated ones
+        // You can use these in your runTest logic
+        // Example:
+        setName(formData.name);
+        setLocation(formData.location);
+        setDeviceType(formData.deviceType);
+        setConnectionType(formData.connectionType);
+        setNotes(formData.notes);
+        setGeo(formData.geo);
+        setISP(formData.isp);
+        setBrowser(formData.browser);
+        // ...and so on
+        runTest(); // or pass formData to runTest if you refactor it
+      }}
+    />
   <TestResultsZone
     results={results}
     name={name}
@@ -157,6 +160,11 @@ const measurePing = async () => {
     connectionType={connectionType}
 
     />
+    
+      <PastResultsModal
+        open={showPast}
+        onClose={() => setShowPast(false)}
+      />
 
     </>
   );

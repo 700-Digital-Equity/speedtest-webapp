@@ -15,9 +15,6 @@ const resultSchema = new mongoose.Schema({
   connectionType: String,       
   notes: String,    
   timestamp: { type: Date, default: Date.now },
- 
-        
-
 });
 
 module.exports = mongoose.model('Result', resultSchema);
