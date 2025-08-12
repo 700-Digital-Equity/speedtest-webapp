@@ -76,7 +76,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         value={name}
         onChange={e => setName(e.target.value)}
         required
-        style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
+        className={style.input}               // was inline style
       />
 
       <label className={style.label}>Location</label>
@@ -84,8 +84,8 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         type="text"
         placeholder="Auto or enter your school/city"
         value={location}
-        onChange={e => { setLocation(e.target.value); setUserEditedLocation(true); }} // NEW
-        style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
+        onChange={e => { setLocation(e.target.value); setUserEditedLocation(true); }}
+        className={style.input}               // was inline style
       />
 
       <label className={style.label}>Device Model</label>
@@ -101,7 +101,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       <select
         value={connectionType}
         onChange={e => setConnectionType(e.target.value)}
-        className={style.input}
+        className={style.select}              // ensure select uses the same grouping styles
       >
         <option value="">Select connection</option>
         <option value="WiFi">WiFi</option>

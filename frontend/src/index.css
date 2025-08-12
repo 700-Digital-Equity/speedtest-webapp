@@ -1,45 +1,119 @@
+/* Default (light) tokens so vars always exist */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --background: #f6f7f9;
+  --text: #213547;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-  --background: #f8f9fa;
-  --text: #232837;
-  --table-bg: #fff;
-  --table-header-bg: #f1f3f5;
-  --table-row-alt: #f9f9f9;
   --primary: #4f8cff;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --card-bg: #ffffff;
+  --surface-1: #ffffff;  /* inputs */
+  --surface-2: #f3f5f8;  /* read-only */
+
+  --table-bg: #ffffff;
+  --table-header-bg: #f1f3f5;
+  --table-row-alt: #f9f9f9;
+
+  --border: #e5e7eb;
+
+  /* Input tokens – these were missing for some states */
+  --input-bg: var(--surface-1);
+  --input-text: var(--text);
+  --input-border: #d7dde6;
+  --row-hover: color-mix(in srgb, var(--primary) 6%, transparent);
+
+  color-scheme: light;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* System dark, if no manual data-theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --background: #121212;
+    --text: #e0e0e0;
+
+    --card-bg: #232837;
+    --surface-1: #1e1e1e;
+    --surface-2: #1b1b1b;
+
+    --table-bg: #232837;
+    --table-header-bg: color-mix(in srgb, var(--table-bg) 88%, white 12%); /* lighter header */
+    --table-row-alt:  color-mix(in srgb, var(--table-bg) 86%, white 14%);  /* lighter stripe */
+    --row-hover:      color-mix(in srgb, var(--table-bg) 80%, white 20%);  /* subtle hover lift */
+
+    --border: #2c3240;
+
+    --input-bg: var(--surface-1);
+    --input-text: var(--text);
+    --input-border: var(--border);
+    --row-hover: color-mix(in srgb, var(--primary) 12%, transparent);
+
+    color-scheme: dark;
+  }
 }
-a:hover {
-  color: #535bf2;
+
+/* Manual overrides still work */
+:root[data-theme="light"] {
+  --input-border: #d7dde6;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --background: #121212;
+  --text: #e0e0e0;
+  --card-bg: #232837;
+  --surface-1: #1e1e1e;
+  --surface-2: #1b1b1b;
+  --table-bg: #232837;
+  --table-header-bg: color-mix(in srgb, var(--table-bg) 90%, white 10%);
+  --table-row-alt:  color-mix(in srgb, var(--table-bg) 86%, white 12%);
+  --row-hover:      color-mix(in srgb, var(--table-bg) 80%, white 20%);
+
+  --border: #2c3240;
+
+  --input-bg: var(--surface-1);
+  --input-text: var(--text);
+  --input-border: var(--border);
+  --row-hover: color-mix(in srgb, var(--primary) 12%, transparent);
+
+  color-scheme: dark;
+}
+
+/* Base elements use the tokens */
+html, body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  display: block;
+  background-color: var(--background);
+  color: var(--text);
+
+  /* ADD: global font */
+  font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+               "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  overflow-y: auto;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Optional: center content horizontally via the app root, not the whole page */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;            /* horizontal centering only */
 }
+
+a {
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: inherit;
+}
+a:hover { opacity: 0.9; }
+
+h1 { font-size: 3.2em; line-height: 1.1; }
 
 button {
   border-radius: 8px;
@@ -48,33 +122,33 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--table-row-alt);
+  color: var(--text);
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
+button:hover { border-color: var(--primary); }
 button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:focus-visible { outline: 4px auto -webkit-focus-ring-color; }
+
+/* Make form controls adopt the current color-scheme */
+input, select, textarea, button {
+  color-scheme: inherit;
+  font-family: inherit; /* ADD */
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-    --background: #1e1e1e;
-    --text: #e0e0e0;
-    --table-bg: #232837;
-    --table-header-bg: #2a2a2a;
-    --table-row-alt: #2a2a2a;
-    --primary: #4f8cff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Force select + options to use themed colors (Chromium/Firefox/Win) */
+select,
+option {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+
+/* Optional: improve contrast of read-only inputs */
+input[readonly],
+textarea[readonly] {
+  background-color: var(--surface-2);
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+  border-style: dashed;
 }

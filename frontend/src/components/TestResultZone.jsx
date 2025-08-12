@@ -13,8 +13,8 @@ export default function TestResultsZone({ results, name, location, deviceModel, 
 
   return (
     <div style={{
-      background: '#232837',
-      color: '#e0e6f0',
+      background: 'var(--card-bg)',   // was '#232837'
+      color: 'var(--text)',           // was '#e0e6f0'
       borderRadius: '12px',
       padding: '24px',
       maxWidth: '420px',
@@ -27,7 +27,7 @@ export default function TestResultsZone({ results, name, location, deviceModel, 
       <div><strong>Device:</strong> {deviceModel}</div>
       <div><strong>Connection:</strong> {connectionType}</div>
       <div><strong>OS:</strong> {os}</div>
-      <hr style={{ margin: '16px 0', borderColor: '#444' }} />
+      <hr style={{ margin: '16px 0', borderColor: 'var(--border)' }} /> {/* was '#444' */}
       <div><strong>Ping:</strong> {results.ping} ms</div>
       <div><strong>Jitter:</strong> {results.jitter !== undefined ? results.jitter.toFixed(2) + ' ms' : 'N/A'}</div>
       <div><strong>Packet Loss:</strong> {results.packetLoss !== undefined ? results.packetLoss.toFixed(1) + ' %' : 'N/A'}</div>
