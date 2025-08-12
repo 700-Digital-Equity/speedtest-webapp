@@ -65,7 +65,8 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           location,
           deviceModel,
           os,
-          connectionType: connectionType === "Other" ? customConnectionType : connectionType,
+          connectionType,
+          customConnectionType, // Add this line
           notes,
           isp,
           ip,

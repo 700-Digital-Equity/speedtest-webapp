@@ -51,86 +51,91 @@ const measurePing = async () => {
   return median(times).toFixed(2);
 };
 
-  const runTest = async () => {
-    setIsRunning(true);
-    setResults(null);
-    try {
-      setProgressStep('Measuring ping...');
-      const ping = await measurePing();
+  // Update the runTest function to accept formData as parameter
+const runTest = async (formData) => {
+  setIsRunning(true);
+  setResults(null);
+  try {
+    setProgressStep('Measuring ping...');
+    const ping = await measurePing();
 
-      // Jitter & packet loss
-      const pingStats = await pingTest(`${SERVER}/ping.json`);
-      const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
-      const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
+    const pingStats = await pingTest(`${SERVER}/ping.json`);
+    const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
+    const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
 
-      setProgressStep('Testing Download speed...');
-      await warmUpDownload();
-      const download = await adaptiveDownload();
-      setProgressStep('Testing Upload speed...');
-      const upload = await adaptiveUpload();
-      setProgressStep('Test complete!');
+    setProgressStep('Testing Download speed...');
+    await warmUpDownload();
+    const download = await adaptiveDownload();
+    setProgressStep('Testing Upload speed...');
+    const upload = await adaptiveUpload();
+    setProgressStep('Test complete!');
 
-      setResults({ ping, jitter, packetLoss, download, upload });
+    setResults({ ping, jitter, packetLoss, download, upload });
 
-      const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-      const finalConnectionType = connectionType === "Other" ? customConnectionType : connectionType;
+    const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+    const finalConnectionType = formData.connectionType === "Other" ? formData.customConnectionType : formData.connectionType;
 
-      await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ip: publicIP.ip,
-          name,
-          location,
-          ping,
-          jitter,
-          packetLoss,
-          download,
-          upload,
-          deviceModel,
-          os,
-          connectionType: finalConnectionType,
-          geo,
-          isp,
-          browser,
-          notes
-
-        }),
-      });
-
-      const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
-      pastResults.unshift({
-        timestamp: new Date().toISOString(),
-        name,
-        location,
+    // Use formData directly instead of state variables
+    await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ip: publicIP.ip,
+        name: formData.name,
+        location: formData.location,
         ping,
         jitter,
         packetLoss,
         download,
         upload,
-        deviceModel,
-        os,
+        deviceModel: formData.deviceModel,
+        os: formData.os,
         connectionType: finalConnectionType,
-        geo,
-        isp,
-        browser,
-        notes
-      });
-      localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
+        geo: formData.geo,
+        isp: formData.isp,
+        browser: formData.browser,
+        notes: formData.notes
+      }),
+    });
 
-      // ISP info
-      getISPInfo().then(console.log);
+    // Also update localStorage with formData
+    const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+    pastResults.unshift({
+      timestamp: new Date().toISOString(),
+      name: formData.name,
+      location: formData.location,
+      ping,
+      jitter,
+      packetLoss,
+      download,
+      upload,
+      deviceModel: formData.deviceModel,
+      os: formData.os,
+      connectionType: finalConnectionType,
+      geo: formData.geo,
+      isp: formData.isp,
+      browser: formData.browser,
+      notes: formData.notes
+    });
+    localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
 
-      // Location, device, connection info (optional logs)
-      getBrowserLocation().then(console.log).catch(console.error);
-      console.log(getDeviceInfo());
-      console.log(getConnectionInfo());
-    } catch (e) {
-      setResults({ error: e.toString() });
-      setProgressStep('Something went wrong.');
-    }
-    setIsRunning(false);
-  };
+    // Update state for display
+    setName(formData.name);
+    setLocation(formData.location);
+    setDeviceModel(formData.deviceModel);
+    setConnectionType(formData.connectionType);
+    setOs(formData.os);
+    setNotes(formData.notes);
+    setGeo(formData.geo);
+    setISP(formData.isp);
+    setBrowser(formData.browser);
+
+  } catch (e) {
+    setResults({ error: e.toString() });
+    setProgressStep('Something went wrong.');
+  }
+  setIsRunning(false);
+};
 
   return (
     <>
@@ -140,20 +145,8 @@ const measurePing = async () => {
     <SpeedTestForm
       isRunning={isRunning}
       onSubmit={async (formData) => {
-        // formData contains all fields, including auto-populated ones
-        // You can use these in your runTest logic
-        // Example:
-        setName(formData.name);
-        setLocation(formData.location);
-        setDeviceModel(formData.deviceModel);
-        setConnectionType(formData.connectionType);
-        setOs(formData.os);
-        setNotes(formData.notes);
-        setGeo(formData.geo);
-        setISP(formData.isp);
-        setBrowser(formData.browser);
-        // ...and so on
-        runTest(); // or pass formData to runTest if you refactor it
+        console.log('Form data being submitted:', formData); // Debug log
+        runTest(formData);
       }}
     />
   <TestResultsZone
