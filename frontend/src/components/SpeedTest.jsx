@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import PastResultsModal from './PastResults.jsx';
 import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
-
+import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
+import SpeedTestForm from './SpeedTestForm.jsx';
+import TestResultsZone from './TestResultZone.jsx';
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -12,10 +14,14 @@ export default function SpeedTest() {
   const [showPast, setShowPast] = useState(false);
 
   // New state for device type, connection type, custom connection, and notes
-  const [deviceType, setDeviceType] = useState('');
+  const [deviceModel, setDeviceModel] = useState('');
   const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
+  const [os, setOs] = useState('');
   const [notes, setNotes] = useState('');
+  const [geo, setGeo] = useState('');
+  const [isp, setISP] = useState('');
+  const [browser, setBrowser] = useState('');
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -45,159 +51,30 @@ const measurePing = async () => {
   return median(times).toFixed(2);
 };
 
-//   const warmUpDownload = async () => {
-//   const res = await fetch(`${SERVER}/100MB.bin?warmup=${Math.random()}`);
-//   const reader = res.body.getReader();
-//   const start = performance.now();
-//   while (performance.now() - start < 2000) {
-//     const { done } = await reader.read();
-//     if (done) break;
-//   }
-//   reader.cancel();
-// };
-  // Improved Download Test: multiple parallel requests over a fixed duration
-  const measureDownload = async () => {
-    const url = `${SERVER}/100MB.bin`;
-    const concurrency = 4;
-    const testDuration = 10 * 1000; // 10 seconds
-
-    let totalBytes = 0;
-    let isStopped = false;
-
-    const download = async () => {
-      while (!isStopped) {
-        const res = await fetch(`${url}?cacheBust=${Math.random()}`);
-        const reader = res.body.getReader();
-        while (!isStopped) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          totalBytes += value.length;
-        }
-      }
-    };
-
-    const downloads = new Array(concurrency).fill(0).map(download);
-
-    const start = performance.now();
-    await Promise.race([
-      new Promise((resolve) => setTimeout(resolve, testDuration)),
-      Promise.all(downloads),
-    ]);
-    isStopped = true;
-    const duration = (performance.now() - start) / 1000;
-    return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
-  };
-
-  const warmUpUpload = async () => {
-    const warmupBlob = new Blob([new Uint8Array(1 * 1024 * 1024)]); // 1MB
-    await fetch(`${SERVER}/upload`, {
-      method: 'POST',
-      body: warmupBlob,
-    });
-  };
-  const measureUpload = async () => {
-    const blob = new Blob([new Uint8Array(20 * 1024 * 1024)]); // 20MB
-    const start = performance.now();
-
-    await fetch(`${SERVER}/upload`, {
-        method: 'POST',
-        body: blob,
-    });
-
-    const end = performance.now();
-    const duration = (end - start) / 1000;
-    return ((blob.size * 8) / duration / 1_000_000).toFixed(2); // Mbps
-  };
-
-  const measureParallelUpload = async (url = `${SERVER}/upload`, concurrency = 2, maxDuration = 15000) => {
-  const blobSizeMB = 50;
-  const blob = new Blob([new Uint8Array(blobSizeMB * 1024 * 1024)]); // 50MB blob
-  const warmupBlob = new Blob([new Uint8Array(10 * 1024 * 1024)]); // 1MB warmup
-
-  const fetchWithTimeout = (url, options, timeout = 10000) => {
-    return Promise.race([
-      fetch(url, options),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
-    ]);
-  };
-
-  // Warm-up: small upload to stabilize connection
-  try {
-    await fetchWithTimeout(url, { method: 'POST', body: warmupBlob }, 3000);
-  } catch (_) {
-    // ignore warmup failure
-  }
-
-  const uploadTimes = [];
-  const abortController = new AbortController();
-
-  // Create an overall timeout promise to abort all uploads after maxDuration
-  const overallTimeout = new Promise((resolve) => {
-    setTimeout(() => {
-      abortController.abort(); // abort ongoing fetches
-      resolve();
-    }, maxDuration);
-  });
-
-  // Start all uploads but listen to abort signal
-  const uploads = new Array(concurrency).fill(null).map(async () => {
-    const start = performance.now();
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        body: blob,
-        signal: abortController.signal,
-      });
-      if (res.ok) {
-        const end = performance.now();
-        uploadTimes.push((end - start) / 1000); // seconds
-      }
-    } catch (err) {
-      // ignore timeout, abort, or fetch errors
-    }
-  });
-
-  // Wait for either all uploads finish or overall timeout triggers
-  await Promise.race([
-    Promise.all(uploads),
-    overallTimeout,
-  ]);
-
-  if (uploadTimes.length === 0) return "0";
-
-  // Remove min/max outliers
-  const trimmedTimes = removeOutliers(uploadTimes);
-  const averageTime = trimmedTimes.reduce((a, b) => a + b, 0) / trimmedTimes.length;
-
-  // total bits uploaded = blob size * successful uploads * 8 bits/byte
-  const totalBitsUploaded = blob.size * trimmedTimes.length * 8;
-
-  return (totalBitsUploaded / averageTime / 1_000_000).toFixed(2); // Mbps
-};
-
-const removeOutliers = (arr) => {
-  if (arr.length <= 2) return arr;
-  const sorted = [...arr].sort((a, b) => a - b);
-  return sorted.slice(1, -1); // remove min and max
-};
-
   const runTest = async () => {
     setIsRunning(true);
     setResults(null);
     try {
       setProgressStep('Measuring ping...');
       const ping = await measurePing();
+
+      // Jitter & packet loss
+      const pingStats = await pingTest(`${SERVER}/ping.json`);
+      const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
+      const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
+
       setProgressStep('Testing Download speed...');
       await warmUpDownload();
       const download = await adaptiveDownload();
       setProgressStep('Testing Upload speed...');
       const upload = await adaptiveUpload();
       setProgressStep('Test complete!');
-      setResults({ ping, download, upload });
+
+      setResults({ ping, jitter, packetLoss, download, upload });
 
       const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-      // Use custom connection type if "Other" is selected
       const finalConnectionType = connectionType === "Other" ? customConnectionType : connectionType;
+
       await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -206,26 +83,48 @@ const removeOutliers = (arr) => {
           name,
           location,
           ping,
+          jitter,
+          packetLoss,
           download,
           upload,
-          deviceType,
+          deviceModel,
+          os,
           connectionType: finalConnectionType,
+          geo,
+          isp,
+          browser,
           notes
+
         }),
       });
+
       const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
       pastResults.unshift({
         timestamp: new Date().toISOString(),
         name,
         location,
         ping,
+        jitter,
+        packetLoss,
         download,
         upload,
-        deviceType,
+        deviceModel,
+        os,
         connectionType: finalConnectionType,
+        geo,
+        isp,
+        browser,
         notes
       });
       localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
+
+      // ISP info
+      getISPInfo().then(console.log);
+
+      // Location, device, connection info (optional logs)
+      getBrowserLocation().then(console.log).catch(console.error);
+      console.log(getDeviceInfo());
+      console.log(getConnectionInfo());
     } catch (e) {
       setResults({ error: e.toString() });
       setProgressStep('Something went wrong.');
@@ -234,198 +133,43 @@ const removeOutliers = (arr) => {
   };
 
   return (
-    <div style={{ padding: 30, fontFamily: 'sans-serif' }}>
-      <h1>Internet Speed Test</h1>
-      <button
-        type="button"
-        onClick={() => setShowPast(true)}
-        style={{
-          margin: '10px 0',
-          padding: '8px 16px',
-          borderRadius: '5px',
-          border: '1px solid #007bff',
-          background: '#fff',
-          color: '#007bff',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        View Past Results
-      </button>
-      <PastResultsModal open={showPast} onClose={() => setShowPast(false)} />
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          runTest();
-        }}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          maxWidth: '400px',
-          margin: '20px auto',
-        }}
-      >
-        <label style={{ fontWeight: 'bold' }}>Name <span style={{ color: 'red' }}>*</span></label>
-        <input
-          type="text"
-          placeholder="Enter your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-          }}
-        />
+    <>
+    <button className='past-results-button' onClick={() => setShowPast(true)}>
+      View Past Results
+    </button>
+    <SpeedTestForm
+      isRunning={isRunning}
+      onSubmit={async (formData) => {
+        // formData contains all fields, including auto-populated ones
+        // You can use these in your runTest logic
+        // Example:
+        setName(formData.name);
+        setLocation(formData.location);
+        setDeviceModel(formData.deviceModel);
+        setConnectionType(formData.connectionType);
+        setOs(formData.os);
+        setNotes(formData.notes);
+        setGeo(formData.geo);
+        setISP(formData.isp);
+        setBrowser(formData.browser);
+        // ...and so on
+        runTest(); // or pass formData to runTest if you refactor it
+      }}
+    />
+  <TestResultsZone
+    results={results}
+    name={name}
+    location={location}
+    deviceModel={deviceModel}
+    connectionType={connectionType}
+    os={os}
+    />
+    
+      <PastResultsModal
+        open={showPast}
+        onClose={() => setShowPast(false)}
+      />
 
-        <label style={{ fontWeight: 'bold' }}>Location</label>
-        <input
-          type="text"
-          placeholder="Enter your school/city (optional)"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-          }}
-        />
-
-        {/* Device Model */}
-        <label style={{ fontWeight: 'bold' }}>Device Model</label>
-        <input
-          type="text"
-          placeholder="e.g. MacBook Pro, Galaxy S23"
-          value={deviceType}
-          onChange={e => setDeviceType(e.target.value)}
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-          }}
-        />
-
-        {/* Connection Type */}
-        <label style={{ fontWeight: 'bold' }}>Connection Type</label>
-        <select
-          value={connectionType}
-          onChange={e => setConnectionType(e.target.value)}
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-          }}
-        >
-          <option value="">Select connection</option>
-          <option value="WiFi">WiFi</option>
-          <option value="Ethernet">Ethernet</option>
-          <option value="Mobile data">Mobile data</option>
-          <option value="Other">Other (type below)</option>
-        </select>
-        {connectionType === "Other" && (
-          <input
-            type="text"
-            value={customConnectionType}
-            onChange={e => setCustomConnectionType(e.target.value)}
-            placeholder="Describe your connection"
-            style={{
-              padding: '10px',
-              fontSize: '16px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-            }}
-          />
-        )}
-
-        {/* Notes */}
-        <label style={{ fontWeight: 'bold' }}>Notes</label>
-        <textarea
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          placeholder="Any notes about your test or setup?"
-          style={{
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            minHeight: '60px',
-          }}
-        />
-
-        <button
-          type="submit"
-          disabled={isRunning}
-          style={{
-            marginTop: '10px',
-            padding: '10px',
-            fontSize: '16px',
-            borderRadius: '5px',
-            border: 'none',
-            backgroundColor: '#007bff',
-            color: 'white',
-            cursor: isRunning ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {isRunning ? 'Running...' : 'Run Speed Test'}
-        </button>
-      </form>
-      {isRunning && (
-        <p style={{ fontStyle: 'italic', marginTop: 10 }}>{progressStep}</p>
-      )}
-
-      {results && (
-        <div style={{ marginTop: 20 }}>
-          {results.error ? (
-            <p style={{ color: 'red' }}>Error: {results.error}</p>
-          ) : (
-            <div
-              style={{
-                backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
-                color: isDarkMode ? '#f0f0f0' : '#333',
-                padding: '24px 32px',
-                borderRadius: '16px',
-                boxShadow: isDarkMode
-                  ? '0 4px 12px rgba(255, 255, 255, 0.05)'
-                  : '0 4px 12px rgba(0, 0, 0, 0.1)',
-                textAlign: 'center',
-                minWidth: '280px',
-                transition: 'transform 0.3s ease',
-                animation: 'fadeIn 0.5s ease-in-out',
-              }}
-            >
-              <h2 style={{ marginBottom: '16px', fontSize: '1.5rem' }}>
-                Test Results
-              </h2>
-              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                <strong>Ping:</strong> {results.ping} ms
-              </div>
-              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                <strong>Download:</strong> {results.download} Mbps
-              </div>
-              <div style={{ fontSize: '1.2rem', margin: '8px 0' }}>
-                <strong>Upload:</strong> {results.upload} Mbps
-              </div>
-              <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
-                <strong>Device:</strong> {deviceType}
-              </div>
-              <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
-                <strong>Connection:</strong> {connectionType === "Other" ? customConnectionType : connectionType}
-              </div>
-              {notes && (
-                <div style={{ fontSize: '1.1rem', margin: '8px 0' }}>
-                  <strong>Notes:</strong> {notes}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    </>
   );
 }

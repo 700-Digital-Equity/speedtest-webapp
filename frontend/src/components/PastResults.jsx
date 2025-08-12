@@ -1,18 +1,18 @@
 import React from 'react';
-import './pastresults.css';
+import styles from '../styles/pastresults.module.css';
 
 export default function PastResultsModal({ open, onClose }) {
   if (!open) return null;
   const results = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
   return (
-    <div className="past-results-modal-backdrop">
-      <div className="past-results-modal-content">
+    <div className={styles.pastResultsModalBackdrop}>
+      <div className={styles.pastResultsModalContent}>
         <h2>Past Results (This Device)</h2>
         <button onClick={onClose} title="Close">&times;</button>
         {results.length === 0 ? (
           <p>No past results.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 16 }}>
+          <table>
             <thead>
               <tr>
                 <th>Date</th>
