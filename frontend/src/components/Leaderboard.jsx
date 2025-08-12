@@ -3,6 +3,7 @@ import styles from '../styles/leaderboard.module.css';
 import PracticeGraph from '../graphs/PracticeGraph';
 import { LeaderboardTable } from './LeaderboardTable';
 import Graph2 from '../graphs/Graph2';
+import { fetchResults } from '../utils/api';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -13,28 +14,24 @@ export default function Leaderboard() {
   const [sortOrder, setSortOrder] = useState('desc');
 
   const pageSize = 10;
-  const LOCAL_BACKEND_URL = 'http://localhost:3000/results';
-  const BACKEND_URL = 'https://jubilant-beauty-production.up.railway.app/results'; // Update if deploying
   
   useEffect(() => {
-    const fetchResults = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${BACKEND_URL}?page=${page}&pageSize=${pageSize}&sortKey=${sortKey}&sortOrder=${sortOrder}`
-        );
-        const data = await response.json();
+    const ac = new AbortController();
+    setLoading(true);
+    fetchResults({ page, pageSize, sortKey, sortOrder }, ac.signal)
+      .then(data => {
         setResults(Array.isArray(data.results) ? data.results : []);
         setTotal(data.total || 0);
-      } catch (err) {
-        console.error('Failed to fetch leaderboard data', err);
-        setResults([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchResults();
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to fetch leaderboard data', err);
+          setResults([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => setLoading(false));
+    return () => ac.abort();
   }, [page, sortKey, sortOrder]);
 
   // Sorting logic

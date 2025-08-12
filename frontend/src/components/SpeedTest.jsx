@@ -4,6 +4,8 @@ import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from
 import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
 import SpeedTestForm from './SpeedTestForm.jsx';
 import TestResultsZone from './TestResultZone.jsx';
+import { postResult } from '../utils/api';
+
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -53,9 +55,9 @@ const measurePing = async () => {
 
   // Update the runTest function to accept formData as parameter
 const runTest = async (formData) => {
-  setIsRunning(true);
-  setResults(null);
   try {
+    setIsRunning(true);
+    setResults(null);
     setProgressStep('Measuring ping...');
     const ping = await measurePing();
 
@@ -73,29 +75,38 @@ const runTest = async (formData) => {
     setResults({ ping, jitter, packetLoss, download, upload });
 
     const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-    const finalConnectionType = formData.connectionType === "Other" ? formData.customConnectionType : formData.connectionType;
+    const finalConnectionType =
+      formData.connectionType === 'Other'
+        ? (formData.customConnectionType || 'Other')
+        : formData.connectionType;
 
-    // Use formData directly instead of state variables
-    await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ip: publicIP.ip,
-        name: formData.name,
-        location: formData.location,
-        ping,
-        jitter,
-        packetLoss,
-        download,
-        upload,
-        deviceModel: formData.deviceModel,
-        os: formData.os,
-        connectionType: finalConnectionType,
-        geo: formData.geo,
-        isp: formData.isp,
-        browser: formData.browser,
-        notes: formData.notes
-      }),
+    // Optional: convert "lat, lon" -> GeoJSON Point
+    let geoPoint = null;
+    if (formData.geo) {
+      const [latStr, lonStr] = formData.geo.split(',').map(s => s.trim());
+      const lat = Number(latStr), lon = Number(lonStr);
+      if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
+        geoPoint = { type: 'Point', coordinates: [lon, lat] };
+      }
+    }
+
+    await postResult({
+      ip: publicIP.ip,
+      name: formData.name,
+      location: formData.location,
+      ping,
+      jitter,
+      packetLoss,
+      download,
+      upload,
+      deviceModel: formData.deviceModel,
+      os: formData.os,
+      connectionType: finalConnectionType,
+      geo: geoPoint ?? formData.geo ?? null, // backend can accept either
+      isp: formData.isp,
+      browser: formData.browser,
+      notes: formData.notes,
+      timestamp: new Date().toISOString(),
     });
 
     // Also update localStorage with formData
@@ -133,8 +144,9 @@ const runTest = async (formData) => {
   } catch (e) {
     setResults({ error: e.toString() });
     setProgressStep('Something went wrong.');
+  } finally {
+    setIsRunning(false);
   }
-  setIsRunning(false);
 };
 
   return (
