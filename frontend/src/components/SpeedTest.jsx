@@ -145,23 +145,70 @@ const runTest = async (formData) => {
   }
 };
 
+  // Map step -> percent for a simple progress bar
+  const progressPercent = React.useMemo(() => {
+    switch (progressStep) {
+      case 'Measuring ping...': return 20;
+      case 'Testing Download speed...': return 60;
+      case 'Testing Upload speed...': return 85;
+      case 'Test complete!': return 100;
+      case 'Something went wrong.': return 100;
+      default: return isRunning ? 10 : 0;
+    }
+  }, [progressStep, isRunning]);
+
   return (
     <>
-    <button className='past-results-button' onClick={() => setShowPast(true)}>
-      View Past Results
-    </button>
-    <SpeedTestForm
-      isRunning={isRunning}
-      onSubmit={runTest}
-    />
-  <TestResultsZone
-    results={results}
-    name={name}
-    location={location}
-    deviceModel={deviceModel}
-    connectionType={connectionType}
-    os={os}
-    />
+      <button className='past-results-button' onClick={() => setShowPast(true)}>
+        View Past Results
+      </button>
+
+      {/* Progress UI */}
+      {(isRunning || progressStep) && (
+        <div style={{ maxWidth: 420, margin: '12px auto' }}>
+          <div
+            aria-live="polite"
+            style={{ textAlign: 'center', marginBottom: 8 }}
+          >
+            {progressStep || (isRunning ? 'Working...' : '')}
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPercent}
+            style={{
+              height: 8,
+              background: '#333',
+              borderRadius: 9999,
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 0 1px #222'
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                background: '#4f8cff',
+                transition: 'width .3s ease'
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <SpeedTestForm
+        isRunning={isRunning}
+        onSubmit={runTest}
+      />
+      <TestResultsZone
+        results={results}
+        name={name}
+        location={location}
+        deviceModel={deviceModel}
+        connectionType={connectionType}
+        os={os}
+        />
     
       <PastResultsModal
         open={showPast}
