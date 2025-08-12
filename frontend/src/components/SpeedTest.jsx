@@ -14,9 +14,10 @@ export default function SpeedTest() {
   const [showPast, setShowPast] = useState(false);
 
   // New state for device type, connection type, custom connection, and notes
-  const [deviceType, setDeviceType] = useState('');
+  const [deviceModel, setDeviceModel] = useState('');
   const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
+  const [os, setOs] = useState('');
   const [notes, setNotes] = useState('');
   const [geo, setGeo] = useState('');
   const [isp, setISP] = useState('');
@@ -86,7 +87,8 @@ const measurePing = async () => {
           packetLoss,
           download,
           upload,
-          deviceType,
+          deviceModel,
+          os,
           connectionType: finalConnectionType,
           geo,
           isp,
@@ -106,7 +108,8 @@ const measurePing = async () => {
         packetLoss,
         download,
         upload,
-        deviceType,
+        deviceModel,
+        os,
         connectionType: finalConnectionType,
         geo,
         isp,
@@ -142,8 +145,9 @@ const measurePing = async () => {
         // Example:
         setName(formData.name);
         setLocation(formData.location);
-        setDeviceType(formData.deviceType);
+        setDeviceModel(formData.deviceModel);
         setConnectionType(formData.connectionType);
+        setOs(formData.os);
         setNotes(formData.notes);
         setGeo(formData.geo);
         setISP(formData.isp);
@@ -156,9 +160,9 @@ const measurePing = async () => {
     results={results}
     name={name}
     location={location}
-    deviceType={deviceType}
+    deviceModel={deviceModel}
     connectionType={connectionType}
-
+    os={os}
     />
     
       <PastResultsModal

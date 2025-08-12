@@ -7,12 +7,13 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
   console.log("Platform info:", info);
   const [name, setName] = useState('Anonymous');
   const [location, setLocation] = useState('');
-  const [deviceType, setDeviceType] = useState('');
+  const [deviceModel, setDeviceModel] = useState('');
   const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
   const [notes, setNotes] = useState('');
   const [isp, setISP] = useState('');
   const [ip, setIP] = useState('');
+  const [os, setOS] = useState('');
   const [geo, setGeo] = useState('');
   const [browser, setBrowser] = useState('');
   const [networkInfo, setNetworkInfo] = useState({});
@@ -30,6 +31,11 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           ? `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`
           : ''
       );
+      setOS(
+      [platform.os?.family, platform.os?.version]
+        .filter(Boolean)
+        .join(' ')
+    );
     });
 
     getBrowserLocation().then(async coords => {
@@ -39,11 +45,11 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
     }).catch(() => {});
 
     // Use platform.js for device and browser info
-    setDeviceType(
-      [platform.manufacturer, platform.product, platform.os?.family, platform.os?.version]
-        .filter(Boolean)
-        .join(' ')
-    );
+    // setDeviceType(
+    //   [platform.manufacturer, platform.product, platform.os?.family, platform.os?.version]
+    //     .filter(Boolean)
+    //     .join(' ')
+    // );
     setBrowser(
       [platform.name, platform.version].filter(Boolean).join(' ')
     );
@@ -57,7 +63,8 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         onSubmit({
           name,
           location,
-          deviceType,
+          deviceModel,
+          os,
           connectionType: connectionType === "Other" ? customConnectionType : connectionType,
           notes,
           isp,
@@ -92,8 +99,8 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       <input
         type="text"
         placeholder="Auto or e.g. MacBook Pro, Galaxy S23"
-        value={deviceType}
-        onChange={e => setDeviceType(e.target.value)}
+        value={deviceModel}
+        onChange={e => setDeviceModel(e.target.value)}
         className={style.input}
       />
 
@@ -139,6 +146,9 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
 
       <label className={style.label}>Browser</label>
       <input type="text" value={browser} readOnly className={style.input} />
+
+      <label className={style.label}>Operating System</label>
+      <input type="text" value={os} readOnly className={style.input} />
 
       <label className={style.label}>Network Info</label>
       <input

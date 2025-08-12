@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from '../styles/leaderboard.module.css';
 import PracticeGraph from '../graphs/PracticeGraph';
 import { LeaderboardTable } from './LeaderboardTable';
+import Graph2 from '../graphs/Graph2';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -78,6 +79,7 @@ export default function Leaderboard() {
 
           <div className={styles.graphBar}>
             <PracticeGraph results={sortedResults} />
+            <Graph2 results={sortedResults} />
           </div>
         </div>
       )}

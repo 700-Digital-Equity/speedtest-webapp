@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function TestResultsZone({ results, name, location, deviceType, connectionType }) {
+export default function TestResultsZone({ results, name, location, deviceModel, connectionType, os }) {
   if (!results) return null;
 
   if (results.error) {
@@ -24,8 +24,9 @@ export default function TestResultsZone({ results, name, location, deviceType, c
       <h2 style={{ marginTop: 0 }}>Speed Test Results</h2>
       <div><strong>Name:</strong> {name}</div>
       <div><strong>Location:</strong> {location}</div>
-      <div><strong>Device:</strong> {deviceType}</div>
+      <div><strong>Device:</strong> {deviceModel}</div>
       <div><strong>Connection:</strong> {connectionType}</div>
+      <div><strong>OS:</strong> {os}</div>
       <hr style={{ margin: '16px 0', borderColor: '#444' }} />
       <div><strong>Ping:</strong> {results.ping} ms</div>
       <div><strong>Jitter:</strong> {results.jitter !== undefined ? results.jitter.toFixed(2) + ' ms' : 'N/A'}</div>
