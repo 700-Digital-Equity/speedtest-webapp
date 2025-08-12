@@ -34,21 +34,31 @@ export default function Leaderboard() {
     return () => ac.abort();
   }, [page, sortKey, sortOrder]);
 
-  // Sorting logic
-  const sortedResults = [...results].sort((a, b) => {
-    if (a[sortKey] === undefined || b[sortKey] === undefined) return 0;
-    if (sortOrder === 'asc') return a[sortKey] > b[sortKey] ? 1 : -1;
-    return a[sortKey] < b[sortKey] ? 1 : -1;
-  });
+  const sortedResults = React.useMemo(() => {
+    if (!Array.isArray(results) || results.length === 0) return results;
+    const arr = results.slice();
+    arr.sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (sortKey === 'timestamp') {
+        const ad = av ? new Date(av).getTime() : 0;
+        const bd = bv ? new Date(bv).getTime() : 0;
+        return sortOrder === 'asc' ? ad - bd : bd - ad;
+      }
+      if (av == null || bv == null) return 0;
+      return sortOrder === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+    });
+    return arr;
+  }, [results, sortKey, sortOrder]);
 
-  const handleSort = key => {
+  const handleSort = React.useCallback((key) => {
     if (sortKey === key) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
       setSortOrder('desc');
     }
-  };
+  }, [sortKey]);
 
   const totalPages = Math.ceil(total / pageSize);
 
