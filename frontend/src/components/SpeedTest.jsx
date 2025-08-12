@@ -62,16 +62,17 @@ const runTest = async (formData) => {
     const ping = await measurePing();
 
     const pingStats = await pingTest(`${SERVER}/ping.json`);
-    const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
-    const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
+    const jitter = pingStats?.jitter ?? null;
+    const packetLoss = pingStats?.packetLoss ?? null;
 
     setProgressStep('Testing Download speed...');
     await warmUpDownload();
     const download = await adaptiveDownload();
+
     setProgressStep('Testing Upload speed...');
     const upload = await adaptiveUpload();
-    setProgressStep('Test complete!');
 
+    setProgressStep('Test complete!');
     setResults({ ping, jitter, packetLoss, download, upload });
 
     const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
@@ -80,12 +81,12 @@ const runTest = async (formData) => {
         ? (formData.customConnectionType || 'Other')
         : formData.connectionType;
 
-    // Optional: convert "lat, lon" -> GeoJSON Point
+    // Optional: convert "lat, lon" string to GeoJSON Point for backend
     let geoPoint = null;
     if (formData.geo) {
       const [latStr, lonStr] = formData.geo.split(',').map(s => s.trim());
       const lat = Number(latStr), lon = Number(lonStr);
-      if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
         geoPoint = { type: 'Point', coordinates: [lon, lat] };
       }
     }
@@ -102,24 +103,31 @@ const runTest = async (formData) => {
       deviceModel: formData.deviceModel,
       os: formData.os,
       connectionType: finalConnectionType,
-      geo: geoPoint ?? formData.geo ?? null, // backend can accept either
+      geo: geoPoint ?? formData.geo ?? null,
       isp: formData.isp,
       browser: formData.browser,
       notes: formData.notes,
       timestamp: new Date().toISOString(),
     });
 
-    // Also update localStorage with formData
-    const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
-    pastResults.unshift({
+    // Reflect the submitted info in UI (from the same formData)
+    setName(formData.name);
+    setLocation(formData.location);
+    setDeviceModel(formData.deviceModel);
+    setConnectionType(finalConnectionType);
+    setOs(formData.os);
+    setNotes(formData.notes);
+    setGeo(formData.geo);
+    setISP(formData.isp);
+    setBrowser(formData.browser);
+
+    // Persist locally
+    const past = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+    past.unshift({
       timestamp: new Date().toISOString(),
       name: formData.name,
       location: formData.location,
-      ping,
-      jitter,
-      packetLoss,
-      download,
-      upload,
+      ping, jitter, packetLoss, download, upload,
       deviceModel: formData.deviceModel,
       os: formData.os,
       connectionType: finalConnectionType,
@@ -128,21 +136,9 @@ const runTest = async (formData) => {
       browser: formData.browser,
       notes: formData.notes
     });
-    localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
-
-    // Update state for display
-    setName(formData.name);
-    setLocation(formData.location);
-    setDeviceModel(formData.deviceModel);
-    setConnectionType(formData.connectionType);
-    setOs(formData.os);
-    setNotes(formData.notes);
-    setGeo(formData.geo);
-    setISP(formData.isp);
-    setBrowser(formData.browser);
-
+    localStorage.setItem('pastSpeedTests', JSON.stringify(past.slice(0, 50)));
   } catch (e) {
-    setResults({ error: e.toString() });
+    setResults({ error: String(e) });
     setProgressStep('Something went wrong.');
   } finally {
     setIsRunning(false);
@@ -156,10 +152,7 @@ const runTest = async (formData) => {
     </button>
     <SpeedTestForm
       isRunning={isRunning}
-      onSubmit={async (formData) => {
-        console.log('Form data being submitted:', formData); // Debug log
-        runTest(formData);
-      }}
+      onSubmit={runTest}
     />
   <TestResultsZone
     results={results}

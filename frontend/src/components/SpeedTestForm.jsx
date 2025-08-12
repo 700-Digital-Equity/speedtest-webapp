@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { getISPInfo, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
 import style from '../styles/speedtestform.module.css';
 import platform from 'platform';
+import { useLocationFromGeo } from '../hooks/useLocationFromGeo';
+
 export default function SpeedTestForm({ isRunning, onSubmit }) {
   const info = platform;
   console.log("Platform info:", info);
   const [name, setName] = useState('Anonymous');
   const [location, setLocation] = useState('');
+  const [userEditedLocation, setUserEditedLocation] = useState(false); // NEW
   const [deviceModel, setDeviceModel] = useState('');
   const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
@@ -23,38 +26,27 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
     getISPInfo().then(data => {
       setISP(data.connection?.org || data.connection?.isp || data.org || data.isp || '');
       setIP(data.ip || '');
-      setLocation(
-        [data.city, data.region, data.country].filter(Boolean).join(', ')
-      );
+      setLocation([data.city, data.region, data.country].filter(Boolean).join(', '));
       setGeo(
         data.latitude && data.longitude
           ? `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`
           : ''
       );
-      setOS(
-      [platform.os?.family, platform.os?.version]
-        .filter(Boolean)
-        .join(' ')
-    );
     });
 
-    getBrowserLocation().then(async coords => {
-      setGeo(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
-      const suburb = await getSuburbFromCoords(coords.latitude, coords.longitude);
-      setLocation(suburb);
-    }).catch(() => {});
+    // Auto-populate OS and browser
+    setOS([platform.os?.family, platform.os?.version].filter(Boolean).join(' '));
+    setBrowser([platform.name, platform.version].filter(Boolean).join(' '));
 
-    // Use platform.js for device and browser info
-    // setDeviceType(
-    //   [platform.manufacturer, platform.product, platform.os?.family, platform.os?.version]
-    //     .filter(Boolean)
-    //     .join(' ')
-    // );
-    setBrowser(
-      [platform.name, platform.version].filter(Boolean).join(' ')
-    );
+    // Optional: network info
     setNetworkInfo(getConnectionInfo());
   }, []);
+
+  // NEW: auto-fill Location from geo when available, but do not override manual edits
+  const { location: autoLocation } = useLocationFromGeo(geo);
+  useEffect(() => {
+    if (autoLocation && !userEditedLocation) setLocation(autoLocation);
+  }, [autoLocation, userEditedLocation]);
 
   return (
     <form
@@ -62,15 +54,15 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         e.preventDefault();
         onSubmit({
           name,
-          location,
+          location, // use possibly auto-filled (and user-overridable) value
           deviceModel,
-          os,
+          os,                 // auto-populated
           connectionType,
-          customConnectionType, // Add this line
+          customConnectionType,
           notes,
           isp,
           ip,
-          geo,
+          geo,                // "lat, lon" string
           browser,
           networkInfo
         });
@@ -92,7 +84,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         type="text"
         placeholder="Auto or enter your school/city"
         value={location}
-        onChange={e => setLocation(e.target.value)}
+        onChange={e => { setLocation(e.target.value); setUserEditedLocation(true); }} // NEW
         style={{ padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #ccc' }}
       />
 
@@ -172,15 +164,4 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       </button>
     </form>
   );
-}
-
-async function getSuburbFromCoords(lat, lon) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  // Compose suburb, city, country (falling back as needed)
-  const suburb = data.address.suburb || data.address.neighbourhood || data.address.village || '';
-  const city = data.address.city || data.address.town || data.address.village || data.address.hamlet || '';
-  const country = data.address.country || '';
-  return [suburb, city, country].filter(Boolean).join(', ');
 }
