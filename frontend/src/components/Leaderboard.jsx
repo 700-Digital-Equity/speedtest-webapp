@@ -8,7 +8,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [sortKey, setSortKey] = useState('download');
+  const [sortKey, setSortKey] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('desc');
 
   const pageSize = 10;
@@ -63,7 +63,12 @@ export default function Leaderboard() {
         <p>No results yet.</p>
       ) : (
         <div className={styles.tableWrapper}>
-          <LeaderboardTable results={sortedResults}/>
+          <LeaderboardTable 
+            results={sortedResults}
+            handleSort={handleSort}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+          />
 
           <div className={styles.pagination}>
             <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
