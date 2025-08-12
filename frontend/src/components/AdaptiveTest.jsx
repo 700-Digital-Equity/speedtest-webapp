@@ -12,10 +12,10 @@ const warmUpDownload = async () => {
 const SERVER = 'https://700-digital-equity.digital';
 
 const adaptiveDownload = async ({
-  maxDuration = 20000,
-  initialConcurrency = 4,
-  maxConcurrency = 12,
-  timeThreshold = 15 // seconds — if download is faster than this, increase load
+  maxDuration = 25000,
+  initialConcurrency = 2,
+  maxConcurrency = 16,
+  timeThreshold = 10 // seconds — if download is faster than this, increase load
 } = {}) => {
   const startTime = performance.now();
   let totalBytes = 0;
@@ -58,10 +58,11 @@ const adaptiveDownload = async ({
     // Adjust concurrency and file size dynamically for next round
     if (roundDuration < timeThreshold) {
       if (concurrency < maxConcurrency) {
-        concurrency++;
+        concurrency = concurrency * 2;
         console.log(`Increased concurrency to ${concurrency}`);
       } else if (fileSize === 10) {
         fileSize = 100;
+        concurrency = initialConcurrency; // Reset concurrency
         console.log(`Switched to 100MB file for better saturation`);
       } else if (fileSize === 100) {
         fileSize = 250;
