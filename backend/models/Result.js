@@ -16,6 +16,8 @@ const resultSchema = new mongoose.Schema({
   connectionType: String,       
   notes: String,    
   timestamp: { type: Date, default: Date.now },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', default: null },
 });
 
 module.exports = mongoose.model('Result', resultSchema);

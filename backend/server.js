@@ -70,14 +70,24 @@ function authRequired(req, res, next) {
 
 // Verify school code (placeholder; implement lookup + bcrypt compare)
 async function verifySchoolCode(plain) {
-  // const school = await SchoolModel.findOne({ active: true, ... });
-  // return (await bcrypt.compare(plain, school.codeHash)) ? school : null;
-  return null; // TODO: implement
+  // Find all active schools
+  const schools = await SchoolModel.find({ active: true });
+  for (const school of schools) {
+    if (school.codeHash && await bcrypt.compare(plain, school.codeHash)) {
+      return school;
+    }
+  }
+  return null;
 }
 
 // Mount routes
 const resultRoutes = require('./routes/results');
-app.use('/api/results', resultRoutes);                    // keep router only
+
+// Pass authRequired as an option to the router
+app.use('/api/results', (req, res, next) => {
+  req.authRequired = authRequired;
+  next();
+}, resultRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend API is running');
@@ -169,6 +179,21 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // If you want auth on result creation, enforce it inside the router instead
 // Remove duplicate app.post('/api/results', ...) to avoid conflicts
+
+app.post('/api/results', authRequired, async (req, res) => {
+  // req.user should have uid and sid (schoolId)
+  const { uid, sid } = req.user;
+  const { ...resultData } = req.body;
+
+  // Save the result with user and school info
+  const result = await ResultModel.create({
+    ...resultData,
+    userId: uid,
+    schoolId: sid || null,
+  });
+
+  res.status(201).json({ ok: true, result });
+});
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
