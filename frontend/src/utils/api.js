@@ -26,4 +26,34 @@ export async function postResult(payload) {
   try { return await res.json(); } catch { return {}; }
 }
 
+export async function signInWithCode(name, code) {
+  const res = await fetch(`${API_BASE}/api/auth/code`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, code }),
+  });
+  if (!res.ok) throw new Error('Invalid code');
+  return res.json();
+}
+export async function continueAsGuest(name) {
+  const res = await fetch(`${API_BASE}/api/auth/guest`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error('Sign-in failed');
+  return res.json();
+}
+export async function fetchMe() {
+  const res = await fetch(`${API_BASE}/api/me`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`/api/me ${res.status}`);
+  return res.json();
+}
+
+export async function logout() {
+  await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+}
+
 export { API_BASE };
