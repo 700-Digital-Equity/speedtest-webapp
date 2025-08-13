@@ -15,8 +15,9 @@ app.set('trust proxy', 1); // Railway / proxies
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://700-digital-equity.digital', // adjust to your prod frontend
-];
+  'https://700-digital-equity.digital',
+  'https://speedtest-test-production.up.railway.app',
+  'https://speedtest-webapp-production.up.railway.app']
 
 const corsOptions = {
   origin(origin, cb) {
@@ -43,8 +44,8 @@ const COOKIE_NAME = 'sid';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 function setSession(res, payload) {
-  const crossSite = process.env.CROSS_SITE === 'true';
-  const sameSite = crossSite ? 'none' : 'lax';
+  const crossSite = 'true';
+  const sameSite = 'lax';
   const secure = crossSite || process.env.NODE_ENV === 'production';
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
   res.cookie(COOKIE_NAME, token, {
