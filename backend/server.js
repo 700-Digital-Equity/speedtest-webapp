@@ -28,8 +28,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));                      // handle preflight
-
 app.use(cookieParser());                                  // ensure before routes
 app.use(express.json());
 
@@ -79,6 +77,8 @@ app.get('/', (req, res) => {
 
 // Example: server-side sorted results (non-auth)
 const Result = require('./models/Result');
+const UserModel = require('./models/User');
+const SchoolModel = require('./models/School');
 app.get('/results', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -123,12 +123,28 @@ app.post('/api/auth/guest', async (req, res) => {
   res.json({ user: { id: user._id, name: user.name, schoolId: null } });
 });
 
-app.get('/api/me', (req, res) => {
+app.get('/api/me', async (req, res) => {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) return res.json({ user: null });
   try {
     const { uid, sid } = jwt.verify(token, JWT_SECRET);
-    return res.json({ user: { id: uid, schoolId: sid } });
+
+    // Load user name and school name
+    const userDoc = await UserModel.findById(uid).lean();
+    let schoolName = null;
+    if (sid) {
+      const school = await SchoolModel.findById(sid).lean();
+      schoolName = school?.name ?? null;
+    }
+
+    return res.json({
+      user: {
+        id: uid,
+        name: userDoc?.name ?? null,
+        schoolId: sid ?? null,
+        schoolName
+      }
+    });
   } catch {
     return res.json({ user: null });
   }

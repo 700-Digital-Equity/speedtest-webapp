@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env?.VITE_API_BASE || 'https://jubilant-beauty-production.up.railway.app';
+const API_BASE = 'https://jubilant-beauty-production.up.railway.app';
 
 function toUrl(path, params) {
   const url = new URL(`${API_BASE}${path}`);
@@ -18,11 +18,11 @@ export async function fetchResults({ page = 1, pageSize = 10, sortKey = 'timesta
 export async function postResult(payload) {
   const res = await fetch(toUrl('/api/results'), {
     method: 'POST',
+    credentials: 'include',                 // send session cookie
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to post result: ${res.status}`);
-  // backend may or may not return JSON; be tolerant
   try { return await res.json(); } catch { return {}; }
 }
 
