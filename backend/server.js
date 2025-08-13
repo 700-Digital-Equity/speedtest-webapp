@@ -28,6 +28,13 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    // cors middleware already set ACAO/ACAC
+    return res.sendStatus(204);
+  }
+  next();
+});
 app.use(cookieParser());                                  // ensure before routes
 app.use(express.json());
 
