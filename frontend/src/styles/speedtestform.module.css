@@ -2,17 +2,20 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 420px;
+  width: 100%;
+  max-width: 500px;
   margin: 24px auto;
-  background: #181c24;
+  background: var(--card-bg);
+  color: var(--text);
   border-radius: 12px;
   padding: 32px 24px;
-  box-shadow: 0 2px 16px 0 #000a  ;
+  box-shadow: 0 2px 16px 0 #000a;
+  border: 1px solid var(--border);
 }
 
 .label {
   font-weight: bold;
-  color: #e0e6f0;
+  color: var(--text); /* was: #e0e6f0 (dark-only) */
   margin-bottom: 2px;
 }
 
@@ -21,24 +24,49 @@
 .textarea {
   padding: 12px;
   font-size: 16px;
-  border-radius: 6px;
-  border: 1px solid #2c3240;
-  background: #232837;
-  color: #e0e6f0;
-  transition: border 0.2s;
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--input-text);                    /* ensure normal text color */
+  border: 1px solid var(--input-border);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  text-align: center; /* Center text in all inputs */
 }
 
-.input:focus,
-.select:focus,
-.textarea:focus {
-  border: 1.5px solid #4f8cff;
-  outline: none;
+/* Make placeholders NOT faded, matching Name/Location appearance */
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--input-text);                    /* was a lighter mix */
+  opacity: 1;                                  /* ensure full opacity across browsers */
 }
 
+/* Ensure the dropdown text is not grey/faded */
+.select {
+  color: var(--input-text);                    /* force visible text color */
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+}
+
+/* Make options match theme colors (affects the popup list in many browsers) */
+.select option {
+  color: var(--input-text);
+  background: var(--input-bg);
+}
+
+/* Keep read-only fields clearly distinct only when readonly */
 .input[readonly] {
-  background: #232837;
-  color: #a0a6b0;
+  background: var(--surface-2);
+  color: color-mix(in srgb, var(--text) 55%, transparent);
   border-style: dashed;
+  cursor: not-allowed;
+}
+
+/* Optional: group for read-only/auto metrics to add contrast block */
+.metricsGroup {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
 }
 
 .button {
@@ -58,6 +86,13 @@
   background: #2c3240;
   color: #888;
   cursor: not-allowed;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center; /* Center buttons horizontally */
 }
 
 @media (max-width: 600px) {

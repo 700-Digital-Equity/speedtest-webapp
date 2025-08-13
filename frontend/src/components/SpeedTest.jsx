@@ -4,6 +4,8 @@ import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from
 import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
 import SpeedTestForm from './SpeedTestForm.jsx';
 import TestResultsZone from './TestResultZone.jsx';
+import { postResult } from '../utils/api';
+
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -53,55 +55,44 @@ const measurePing = async () => {
 
   // Update the runTest function to accept formData as parameter
 const runTest = async (formData) => {
-  setIsRunning(true);
-  setResults(null);
   try {
+    setIsRunning(true);
+    setResults(null);
     setProgressStep('Measuring ping...');
     const ping = await measurePing();
 
     const pingStats = await pingTest(`${SERVER}/ping.json`);
-    const jitter = pingStats.jitter !== undefined ? pingStats.jitter : null;
-    const packetLoss = pingStats.packetLoss !== undefined ? pingStats.packetLoss : null;
+    const jitter = pingStats?.jitter ?? null;
+    const packetLoss = pingStats?.packetLoss ?? null;
 
     setProgressStep('Testing Download speed...');
     await warmUpDownload();
     const download = await adaptiveDownload();
+
     setProgressStep('Testing Upload speed...');
     const upload = await adaptiveUpload();
-    setProgressStep('Test complete!');
 
+    setProgressStep('Test complete!');
     setResults({ ping, jitter, packetLoss, download, upload });
 
     const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-    const finalConnectionType = formData.connectionType === "Other" ? formData.customConnectionType : formData.connectionType;
+    const finalConnectionType =
+      formData.connectionType === 'Other'
+        ? (formData.customConnectionType || 'Other')
+        : formData.connectionType;
 
-    // Use formData directly instead of state variables
-    await fetch('https://jubilant-beauty-production.up.railway.app/api/results', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ip: publicIP.ip,
-        name: formData.name,
-        location: formData.location,
-        ping,
-        jitter,
-        packetLoss,
-        download,
-        upload,
-        deviceModel: formData.deviceModel,
-        os: formData.os,
-        connectionType: finalConnectionType,
-        geo: formData.geo,
-        isp: formData.isp,
-        browser: formData.browser,
-        notes: formData.notes
-      }),
-    });
+    // Optional: convert "lat, lon" string to GeoJSON Point for backend
+    let geoPoint = null;
+    if (formData.geo) {
+      const [latStr, lonStr] = formData.geo.split(',').map(s => s.trim());
+      const lat = Number(latStr), lon = Number(lonStr);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        geoPoint = { type: 'Point', coordinates: [lon, lat] };
+      }
+    }
 
-    // Also update localStorage with formData
-    const pastResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
-    pastResults.unshift({
-      timestamp: new Date().toISOString(),
+    await postResult({
+      ip: publicIP.ip,
       name: formData.name,
       location: formData.location,
       ping,
@@ -112,51 +103,112 @@ const runTest = async (formData) => {
       deviceModel: formData.deviceModel,
       os: formData.os,
       connectionType: finalConnectionType,
-      geo: formData.geo,
+      geo: geoPoint ?? formData.geo ?? null,
       isp: formData.isp,
       browser: formData.browser,
-      notes: formData.notes
+      notes: formData.notes,
+      timestamp: new Date().toISOString(),
     });
-    localStorage.setItem('pastSpeedTests', JSON.stringify(pastResults.slice(0, 10)));
 
-    // Update state for display
+    // Reflect the submitted info in UI (from the same formData)
     setName(formData.name);
     setLocation(formData.location);
     setDeviceModel(formData.deviceModel);
-    setConnectionType(formData.connectionType);
+    setConnectionType(finalConnectionType);
     setOs(formData.os);
     setNotes(formData.notes);
     setGeo(formData.geo);
     setISP(formData.isp);
     setBrowser(formData.browser);
 
+    // Persist locally
+    const past = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+    past.unshift({
+      timestamp: new Date().toISOString(),
+      name: formData.name,
+      location: formData.location,
+      ping, jitter, packetLoss, download, upload,
+      deviceModel: formData.deviceModel,
+      os: formData.os,
+      connectionType: finalConnectionType,
+      geo: formData.geo,
+      isp: formData.isp,
+      browser: formData.browser,
+      notes: formData.notes
+    });
+    localStorage.setItem('pastSpeedTests', JSON.stringify(past.slice(0, 50)));
   } catch (e) {
-    setResults({ error: e.toString() });
+    setResults({ error: String(e) });
     setProgressStep('Something went wrong.');
+  } finally {
+    setIsRunning(false);
   }
-  setIsRunning(false);
 };
+
+  // Map step -> percent for a simple progress bar
+  const progressPercent = React.useMemo(() => {
+    switch (progressStep) {
+      case 'Measuring ping...': return 20;
+      case 'Testing Download speed...': return 60;
+      case 'Testing Upload speed...': return 85;
+      case 'Test complete!': return 100;
+      case 'Something went wrong.': return 100;
+      default: return isRunning ? 10 : 0;
+    }
+  }, [progressStep, isRunning]);
 
   return (
     <>
-    <button className='past-results-button' onClick={() => setShowPast(true)}>
-      View Past Results
-    </button>
-    <SpeedTestForm
-      isRunning={isRunning}
-      onSubmit={async (formData) => {
-        console.log('Form data being submitted:', formData); // Debug log
-        runTest(formData);
-      }}
-    />
-  <TestResultsZone
-    results={results}
-    name={name}
-    location={location}
-    deviceModel={deviceModel}
-    connectionType={connectionType}
-    os={os}
-    />
+      <button className='past-results-button' onClick={() => setShowPast(true)}>
+        View Past Results
+      </button>
+
+      {/* Progress UI */}
+      {(isRunning || progressStep) && (
+        <div style={{ maxWidth: 420, margin: '12px auto' }}>
+          <div
+            aria-live="polite"
+            style={{ textAlign: 'center', marginBottom: 8 }}
+          >
+            {progressStep || (isRunning ? 'Working...' : '')}
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progressPercent}
+            style={{
+              height: 8,
+              background: '#333',
+              borderRadius: 9999,
+              overflow: 'hidden',
+              boxShadow: 'inset 0 0 0 1px #222'
+            }}
+          >
+            <div
+              style={{
+                width: `${progressPercent}%`,
+                height: '100%',
+                background: '#4f8cff',
+                transition: 'width .3s ease'
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <SpeedTestForm
+        isRunning={isRunning}
+        onSubmit={runTest}
+      />
+      <TestResultsZone
+        results={results}
+        name={name}
+        location={location}
+        deviceModel={deviceModel}
+        connectionType={connectionType}
+        os={os}
+        />
     
       <PastResultsModal
         open={showPast}

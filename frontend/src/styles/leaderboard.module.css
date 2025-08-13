@@ -10,34 +10,61 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--table-bg);
+  background: var(--card-bg);              /* was var(--table-bg) */
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .leaderboardTable {
   width: 100%;
   border-collapse: collapse;
-  background-color: #1e1e1e;
-  color: #f0f0f0;
+  background-color: var(--table-bg);
+  color: var(--text);
 }
 
-.leaderboardTable th,
-.leaderboardTable td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.leaderboardTable th {
+.leaderboardTable thead th {
   background-color: var(--table-header-bg);
-  color: #ffffff;
-  font-weight: bold;
+  color: var(--text);
+  font-weight: 600;
+  text-align: center;              /* center header text */
+  vertical-align: middle;          /* vertical centering */
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
-.leaderboardTable tr:nth-child(even) {
+/* If headers are clickable buttons (for sorting), center those too */
+.leaderboardTable thead th button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.leaderboardTable tbody td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Zebra stripes for clarity in light and dark */
+.leaderboardTable tbody tr:nth-child(odd) {
+  background-color: var(--table-bg);
+}
+.leaderboardTable tbody tr:nth-child(even) {
   background-color: var(--table-row-alt);
+}
+
+/* Subtle hover */
+.leaderboardTable tbody tr:hover {
+  background-color: var(--row-hover);
+  transition: background-color .15s ease-in-out;
 }
 
 .pagination {
@@ -60,41 +87,5 @@
 
   .leaderboardContainer h1 {
     font-size: 22px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #121212;
-    color: #e0e0e0;
-  }
-
-  .tableWrapper {
-     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    background: #1e1e1e;
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
-  }
-
-  .leaderboardTable {
-    background-color: #1e1e1e;
-    color: #f0f0f0;
-  }
-
-  .leaderboardTable th {
-    background-color: #2a2a2a;
-    color: #ffffff;
-  }
-
-  .leaderboardTable tr:nth-child(even) {
-    background-color: #2a2a2a;
-  }
-
-  .graphBar {
-    background-color: #2a2a2a;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
   }
 }

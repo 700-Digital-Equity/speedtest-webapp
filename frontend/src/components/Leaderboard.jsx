@@ -3,6 +3,7 @@ import styles from '../styles/leaderboard.module.css';
 import PracticeGraph from '../graphs/PracticeGraph';
 import { LeaderboardTable } from './LeaderboardTable';
 import Graph2 from '../graphs/Graph2';
+import { fetchResults } from '../utils/api';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -13,45 +14,51 @@ export default function Leaderboard() {
   const [sortOrder, setSortOrder] = useState('desc');
 
   const pageSize = 10;
-  const LOCAL_BACKEND_URL = 'http://localhost:3000/results';
-  const BACKEND_URL = 'https://jubilant-beauty-production.up.railway.app/results'; // Update if deploying
   
   useEffect(() => {
-    const fetchResults = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${BACKEND_URL}?page=${page}&pageSize=${pageSize}&sortKey=${sortKey}&sortOrder=${sortOrder}`
-        );
-        const data = await response.json();
+    const ac = new AbortController();
+    setLoading(true);
+    fetchResults({ page, pageSize, sortKey, sortOrder }, ac.signal)
+      .then(data => {
         setResults(Array.isArray(data.results) ? data.results : []);
         setTotal(data.total || 0);
-      } catch (err) {
-        console.error('Failed to fetch leaderboard data', err);
-        setResults([]);
-        setTotal(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchResults();
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to fetch leaderboard data', err);
+          setResults([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => setLoading(false));
+    return () => ac.abort();
   }, [page, sortKey, sortOrder]);
 
-  // Sorting logic
-  const sortedResults = [...results].sort((a, b) => {
-    if (a[sortKey] === undefined || b[sortKey] === undefined) return 0;
-    if (sortOrder === 'asc') return a[sortKey] > b[sortKey] ? 1 : -1;
-    return a[sortKey] < b[sortKey] ? 1 : -1;
-  });
+  const sortedResults = React.useMemo(() => {
+    if (!Array.isArray(results) || results.length === 0) return results;
+    const arr = results.slice();
+    arr.sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (sortKey === 'timestamp') {
+        const ad = av ? new Date(av).getTime() : 0;
+        const bd = bv ? new Date(bv).getTime() : 0;
+        return sortOrder === 'asc' ? ad - bd : bd - ad;
+      }
+      if (av == null || bv == null) return 0;
+      return sortOrder === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+    });
+    return arr;
+  }, [results, sortKey, sortOrder]);
 
-  const handleSort = key => {
+  const handleSort = React.useCallback((key) => {
     if (sortKey === key) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortKey(key);
       setSortOrder('desc');
     }
-  };
+  }, [sortKey]);
 
   const totalPages = Math.ceil(total / pageSize);
 

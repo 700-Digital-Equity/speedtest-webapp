@@ -2,14 +2,23 @@ const express = require('express');
 const router = express.Router();
 const Result = require('../models/Result');
 
-// Save a speed test result
-router.post('/', async (req, res) => {
+// Use req.authRequired as middleware
+router.post('/', function(req, res, next) {
+  req.authRequired(req, res, next);
+}, async (req, res) => {
   try {
-    const result = new Result(req.body);
-    await result.save();
-    res.status(201).json(result);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
+    const { uid, sid } = req.user;
+    const resultData = req.body;
+
+    const result = await Result.create({
+      ...resultData,
+      userId: uid,
+      schoolId: sid || null,
+    });
+
+    res.status(201).json({ ok: true, result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
