@@ -45,7 +45,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
 
 function setSession(res, payload) {
   const crossSite = 'true';
-  const sameSite = None; Secure
+  const sameSite = 'none'; 
   const secure = crossSite || process.env.NODE_ENV === 'production';
   const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
   res.cookie(COOKIE_NAME, token, {
