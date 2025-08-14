@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = 'https://jubilant-beauty-production.up.railway.app';
 
 function toUrl(path, params) {
   const url = new URL(`${API_BASE}${path}`);
