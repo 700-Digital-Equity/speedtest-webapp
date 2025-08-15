@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PastResultsModal from './PastResults.jsx';
 import { adaptiveDownload, adaptiveUpload, streamedUpload, warmUpDownload } from './AdaptiveTest';
 import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionInfo } from './ExtraTests';
 import SpeedTestForm from './SpeedTestForm.jsx';
 import TestResultsZone from './TestResultZone.jsx';
-import { postResult } from '../utils/api';
+import { postResult, fetchResults } from '../utils/api';
+import ResultsMap from '../graphs/ResultsMap.jsx';
 
 export default function SpeedTest() {
   const [results, setResults] = useState(null);
@@ -91,6 +92,7 @@ const runTest = async (formData) => {
       }
     }
 
+    // After posting the result and getting the latest result object:
     await postResult({
       ip: publicIP.ip,
       name: formData.name,
@@ -121,7 +123,7 @@ const runTest = async (formData) => {
     setISP(formData.isp);
     setBrowser(formData.browser);
 
-    // Persist locally
+    // Persist locally (optional, for local history)
     const past = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
     past.unshift({
       timestamp: new Date().toISOString(),
@@ -137,6 +139,11 @@ const runTest = async (formData) => {
       notes: formData.notes
     });
     localStorage.setItem('pastSpeedTests', JSON.stringify(past.slice(0, 50)));
+
+    // Fetch all results from backend and update state
+    const data = await fetchResults({ page: 1, pageSize: 1000 });
+    setResults(data.results);
+    console.log('Results for map:', results);
   } catch (e) {
     setResults({ error: String(e) });
     setProgressStep('Something went wrong.');
@@ -156,7 +163,6 @@ const runTest = async (formData) => {
       default: return isRunning ? 10 : 0;
     }
   }, [progressStep, isRunning]);
-
   return (
     <>
       <button className='past-results-button' onClick={() => setShowPast(true)}>
@@ -202,7 +208,7 @@ const runTest = async (formData) => {
         onSubmit={runTest}
       />
       <TestResultsZone
-        results={results}
+        results={Array.isArray(results) ? results[0] : results}
         name={name}
         location={location}
         deviceModel={deviceModel}

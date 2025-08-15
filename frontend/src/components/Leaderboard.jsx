@@ -4,6 +4,7 @@ import PracticeGraph from '../graphs/PracticeGraph';
 import { LeaderboardTable } from './LeaderboardTable';
 import Graph2 from '../graphs/Graph2';
 import { fetchResults } from '../utils/api';
+import ResultsMap from '../graphs/ResultsMap.jsx';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -59,6 +60,7 @@ export default function Leaderboard() {
       setSortOrder('desc');
     }
   }, [sortKey]);
+  console.log('sortedResults for map:', sortedResults);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -87,6 +89,8 @@ export default function Leaderboard() {
           <div className={styles.graphBar}>
             <PracticeGraph results={sortedResults} />
             <Graph2 results={sortedResults} />
+            <ResultsMap results={sortedResults} />
+
           </div>
         </div>
       )}
