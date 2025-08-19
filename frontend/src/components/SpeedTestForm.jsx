@@ -27,16 +27,23 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       setISP(data.connection?.org || data.connection?.isp || data.org || data.isp || '');
       setIP(data.ip || '');
       setLocation([data.city, data.region, data.country].filter(Boolean).join(', '));
-      setGeo(
-        data.latitude && data.longitude
-          ? `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`
-          : ''
-      );
+      // setGeo(
+      //   data.latitude && data.longitude
+      //     ? `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`
+      //     : ''
+      // );
     });
 
     // Auto-populate OS and browser
     setOS([platform.os?.family, platform.os?.version].filter(Boolean).join(' '));
     setBrowser([platform.name, platform.version].filter(Boolean).join(' '));
+    getBrowserLocation().then(coords => {
+    if (coords && coords.latitude && coords.longitude) {
+      setGeo(`${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`);
+    }
+  }).catch(() => {
+    setGeo('');
+  });
 
     // Optional: network info
     setNetworkInfo(getConnectionInfo());

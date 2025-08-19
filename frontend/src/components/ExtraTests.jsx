@@ -40,8 +40,12 @@ export function getBrowserLocation() {
       reject('Geolocation not supported');
     } else {
       navigator.geolocation.getCurrentPosition(
-        pos => resolve(pos.coords),
-        err => reject(err.message)
+        pos => {
+        resolve(pos.coords),
+        console.log('Lat:', pos.coords.latitude, 'Lon:', pos.coords.longitude, 'Accuracy:', pos.coords.accuracy, 'meters');
+        },
+        err => {reject(err.message);},
+       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000}
       );
     }
   });
