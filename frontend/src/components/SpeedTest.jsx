@@ -5,6 +5,8 @@ import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionI
 import SpeedTestForm from './SpeedTestForm.jsx';
 import TestResultsZone from './TestResultZone.jsx';
 import { postResult, fetchResults } from '../utils/api';
+import LiveResults from './LiveResults.jsx';
+import LiveGraph from '../graphs/LiveGraph.jsx';
 import ResultsMap from '../graphs/ResultsMap.jsx';
 
 export default function SpeedTest() {
@@ -25,6 +27,16 @@ export default function SpeedTest() {
   const [geo, setGeo] = useState('');
   const [isp, setISP] = useState('');
   const [browser, setBrowser] = useState('');
+
+  // Live results state
+  const [livePing, setLivePing] = useState(null);
+  const [liveJitter, setLiveJitter] = useState(null);
+  const [livePacketLoss, setLivePacketLoss] = useState(null);
+  const [liveDownload, setLiveDownload] = useState(null);
+  const [liveUpload, setLiveUpload] = useState(null);
+  // Live graph history state
+  const [liveDownloadHistory, setLiveDownloadHistory] = useState([]);
+  const [liveUploadHistory, setLiveUploadHistory] = useState([]);
 
   const SERVER = 'https://700-digital-equity.digital';
 
@@ -56,22 +68,63 @@ const measurePing = async () => {
 
   // Update the runTest function to accept formData as parameter
 const runTest = async (formData) => {
+
+  // Before running the test, declare variables:
+  let ping = null;
+  let jitter = null;
+  let packetLoss = null;
+
+  // Clear live results state for new test
+  setLivePing(null);
+  setLiveJitter(null);
+  setLivePacketLoss(null);
+  setLiveDownload(null);
+  setLiveUpload(null);
+  setLiveDownloadHistory([]);
+  setLiveUploadHistory([]);
+
   try {
     setIsRunning(true);
     setResults(null);
     setProgressStep('Measuring ping...');
-    const ping = await measurePing();
+    const medianPing = await measurePing();
+    setLivePing(medianPing);
 
+    setProgressStep('Measuring ping...');
     const pingStats = await pingTest(`${SERVER}/ping.json`);
-    const jitter = pingStats?.jitter ?? null;
-    const packetLoss = pingStats?.packetLoss ?? null;
+    ping = pingStats?.ping ?? medianPing ?? null;
+    jitter = pingStats?.jitter ?? null;
+    packetLoss = pingStats?.packetLoss ?? null;
 
+    setLiveJitter(jitter);
+    setLivePacketLoss(packetLoss);
+
+    // --- Download with spike suppression (global) ---
     setProgressStep('Testing Download speed...');
     await warmUpDownload();
-    const download = await adaptiveDownload();
+    const download = await adaptiveDownload({
+      onProgress: (speed, totalBytes, globalStartTime) => {
+        const elapsed = (performance.now() - globalStartTime) / 1000;
+        if (elapsed > 1 || totalBytes > 1_000_000) {
+          const val = Number(speed).toFixed(2);
+          setLiveDownload(val);
+          setLiveDownloadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
+        }
+      }
+    });
 
+    // --- Upload with spike suppression (global) ---
     setProgressStep('Testing Upload speed...');
-    const upload = await adaptiveUpload();
+    const upload = await adaptiveUpload({
+      onProgress: (speed, totalBytes, globalStartTime) => {
+        const elapsed = (performance.now() - globalStartTime) / 1000;
+        if (elapsed > 1 || totalBytes > 1_000_000) {
+          const val = Number(speed).toFixed(2);
+          setLiveUpload(val);
+          setLiveUploadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
+        }
+      }
+    });
 
     setProgressStep('Test complete!');
     setResults({ ping, jitter, packetLoss, download, upload });
@@ -163,6 +216,13 @@ const runTest = async (formData) => {
       default: return isRunning ? 10 : 0;
     }
   }, [progressStep, isRunning]);
+
+  useEffect(() => {
+    if (isRunning) {
+      console.log('Live:', { livePing, liveJitter, livePacketLoss, liveDownload, liveUpload });
+    }
+  }, [livePing, liveJitter, livePacketLoss, liveDownload, liveUpload, isRunning]);
+
   return (
     <>
       <button className='past-results-button' onClick={() => setShowPast(true)}>
@@ -221,6 +281,21 @@ const runTest = async (formData) => {
         onClose={() => setShowPast(false)}
       />
 
+      {isRunning && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', alignItems: 'flex-start' }}>
+          <LiveResults
+            ping={livePing}
+            jitter={liveJitter}
+            packetLoss={livePacketLoss}
+            download={liveDownload}
+            upload={liveUpload}
+          />
+          <LiveGraph
+            downloadHistory={liveDownloadHistory}
+            uploadHistory={liveUploadHistory}
+          />
+        </div>
+      )}
     </>
   );
 }
