@@ -44,6 +44,7 @@ export default function ResultsDashboard({ results }) {
   const [sortKey, setSortKey] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [mapFullScreen, setMapFullScreen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState('download');
   const [selectedLineGraph, setSelectedLineGraph] = useState('downloadUploadLine');
 
@@ -133,15 +134,58 @@ export default function ResultsDashboard({ results }) {
     { value: 'avgSpeedByDay', label: 'Average Speed by Day' },
   ];
   return (
-    <div className={styles.dashboardGrid} style={{ position: 'relative' }}>
-      <div className={styles.dashboardCard} style={{height: 420}}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  <div className={styles.dashboardGrid} style={{ position: 'relative', minWidth: 1100, width: '100%', maxWidth: 1600, margin: '0 auto' }}>
+      {/* Map Card (normal or fullscreen) */}
+      <div
+        className={styles.dashboardCard}
+        style={
+          mapFullScreen
+            ? {
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                zIndex: 1000,
+                background: '#181c24',
+                boxShadow: 'none',
+                borderRadius: 0,
+                margin: 0,
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+              }
+            : { height: 750, transition: 'height 0.2s', minWidth: 600, width: '100%' }
+        }
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mapFullScreen ? '16px 24px 0 24px' : undefined }}>
           <h2 className={styles.dashboardHeader}>Map</h2>
-          <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setMapFullScreen(f => !f)}
+              style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#4e79a7', color: '#fff', border: 'none', cursor: 'pointer' }}
+              title={mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+            >
+              {mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+            </button>
+            <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
+          </div>
         </div>
-  <ResultsHeatMap results={results} onBoundsChange={setVisibleBounds} userResults={userResults} />
+        <div style={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, display: 'flex' }}>
+            <ResultsHeatMap
+              results={results}
+              onBoundsChange={setVisibleBounds}
+              userResults={userResults}
+              style={mapFullScreen ? { height: '100%', width: '100%' } : { height: '100%', width: '100%' }}
+            />
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 8, fontSize: 15, color: '#4e79a7' }}>
+          Showing <b>{filteredResults.length}</b> result{filteredResults.length === 1 ? '' : 's'} in this area
+        </div>
       </div>
-      <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+  <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 480, width: '100%' }}>
         <h2 className={styles.dashboardHeader}>Leaderboard</h2>
         <div style={{flex: 1, overflow: 'auto'}}>
           <LeaderboardTable 

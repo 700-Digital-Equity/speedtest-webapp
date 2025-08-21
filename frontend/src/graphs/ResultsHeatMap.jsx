@@ -93,7 +93,7 @@ function HeatmapLayer({ points }) {
   return null;
 }
 
-export default function ResultsHeatMap({ results, onBoundsChange, userResults = [] }) {
+export default function ResultsHeatMap({ results, onBoundsChange, userResults = [], style }) {
   // Use raw points for the heatmap (no grid aggregation)
   const points = (results || [])
     .map(r => {
@@ -126,7 +126,7 @@ export default function ResultsHeatMap({ results, onBoundsChange, userResults = 
     : [-36.8485, 174.7633]; // Auckland default
 
   return (
-    <MapContainer center={center} zoom={11} style={{ height: 400, width: '100%' }}>
+    <MapContainer center={center} zoom={11} style={style || { height: 400, width: '100%' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors & CartoDB'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
