@@ -1,3 +1,4 @@
+import FloatingResultsTable from './FloatingResultsTable';
 import styles from '../styles/leaderboard.module.css';
 import React, { useState, useMemo } from 'react';
 import AnalysisSidebar from './AnalysisSidebar';
@@ -45,6 +46,7 @@ export default function ResultsDashboard({ results }) {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [mapFullScreen, setMapFullScreen] = useState(false);
+  const [showFloatingTable, setShowFloatingTable] = useState(true);
   const [selectedMetric, setSelectedMetric] = useState('download');
   const [selectedLineGraph, setSelectedLineGraph] = useState('downloadUploadLine');
 
@@ -168,6 +170,13 @@ export default function ResultsDashboard({ results }) {
             >
               {mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
             </button>
+            <button
+              onClick={() => setShowFloatingTable(f => !f)}
+              style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#e15759', color: '#fff', border: 'none', cursor: 'pointer' }}
+              title={showFloatingTable ? 'Hide Results Table' : 'Show Results Table'}
+            >
+              {showFloatingTable ? 'Hide Table' : 'Show Table'}
+            </button>
             <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
           </div>
         </div>
@@ -184,6 +193,15 @@ export default function ResultsDashboard({ results }) {
         <div style={{ textAlign: 'center', marginTop: 8, fontSize: 15, color: '#4e79a7' }}>
           Showing <b>{filteredResults.length}</b> result{filteredResults.length === 1 ? '' : 's'} in this area
         </div>
+        {showFloatingTable && (
+          <FloatingResultsTable
+            results={sortedFilteredResults}
+            onClose={() => setShowFloatingTable(false)}
+            handleSort={handleSort}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+          />
+        )}
       </div>
   <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 480, width: '100%' }}>
         <h2 className={styles.dashboardHeader}>Leaderboard</h2>
