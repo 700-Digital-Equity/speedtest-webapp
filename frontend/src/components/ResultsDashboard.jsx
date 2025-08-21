@@ -15,6 +15,9 @@ function isInBounds(lat, lon, bounds) {
 }
 
 
+
+import styles from '../styles/leaderboard.module.css';
+
 export default function ResultsDashboard({ results }) {
   const [visibleBounds, setVisibleBounds] = useState(null);
   const [sortKey, setSortKey] = useState('timestamp');
@@ -22,9 +25,7 @@ export default function ResultsDashboard({ results }) {
 
   // Filter results to those within the current map bounds
   const filteredResults = useMemo(() => {
-    console.log('[Dashboard] useMemo running. visibleBounds:', visibleBounds, 'results:', results);
     if (!visibleBounds) return results;
-    console.log('[Dashboard] visibleBounds:', visibleBounds);
     const filtered = results.filter(r => {
       let lat, lon;
       if (r.geo && r.geo.type === 'Point' && Array.isArray(r.geo.coordinates)) {
@@ -35,20 +36,16 @@ export default function ResultsDashboard({ results }) {
         lat = latStr; lon = lonStr;
       }
       if (typeof lat === 'number' && typeof lon === 'number') {
-        const inBounds = isInBounds(lat, lon, visibleBounds);
-        console.log(`[Dashboard] Checking result lat: ${lat}, lon: ${lon}, inBounds: ${inBounds}`);
-        return inBounds;
-      } else {
-        console.log('[Dashboard] Skipping result with invalid lat/lon:', r);
+        return isInBounds(lat, lon, visibleBounds);
       }
       return false;
     });
-    console.log('[Dashboard] filteredResults:', filtered);
     return filtered;
   }, [results, visibleBounds]);
 
   // Sorting logic for filtered results
   const sortedFilteredResults = useMemo(() => {
+    console.log('Initial filteredResults length:', filteredResults.length);
     if (!Array.isArray(filteredResults) || filteredResults.length === 0) return filteredResults;
     const arr = filteredResults.slice();
     arr.sort((a, b) => {
@@ -62,8 +59,20 @@ export default function ResultsDashboard({ results }) {
       if (av == null || bv == null) return 0;
       return sortOrder === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
     });
+    console.log('sortedFilteredResults length:', arr.length);
     return arr;
   }, [filteredResults, sortKey, sortOrder]);
+
+  // Pagination state and logic
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(sortedFilteredResults.length / pageSize) || 1;
+  // Reset to page 1 if filtered results change
+  React.useEffect(() => { setPage(1); }, [filteredResults]);
+  const pagedResults = useMemo(() => {
+    const pageSlice = sortedFilteredResults.slice((page - 1) * pageSize, page * pageSize);
+    return pageSlice;
+  }, [sortedFilteredResults, page, pageSize]);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -75,17 +84,27 @@ export default function ResultsDashboard({ results }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, alignItems: 'flex-start', justifyContent: 'center' }}>
-      <div style={{ flex: '1 1 400px', minWidth: 350, maxWidth: 700 }}>
+    <div className={styles.dashboardGrid}>
+      <div className={styles.dashboardCard} style={{height: 420}}>
+        <h2 className={styles.dashboardHeader}>Map</h2>
         <ResultsMap results={results} onBoundsChange={setVisibleBounds} />
       </div>
-      <div style={{ flex: '1 1 400px', minWidth: 350, maxWidth: 700 }}>
-        <LeaderboardTable 
-          results={sortedFilteredResults}
-          handleSort={handleSort}
-          sortKey={sortKey}
-          sortOrder={sortOrder}
-        />
+      <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+        <h2 className={styles.dashboardHeader}>Leaderboard</h2>
+        <div style={{flex: 1, overflow: 'auto'}}>
+          <LeaderboardTable 
+            results={pagedResults}
+            handleSort={handleSort}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+            compact
+          />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+          <button onClick={() => setPage(page - 1)} disabled={page === 1} style={{ minWidth: 60 }}>Prev</button>
+          <span style={{ fontSize: 15 }}>Page {page} of {totalPages}</span>
+          <button onClick={() => setPage(page + 1)} disabled={page === totalPages} style={{ minWidth: 60 }}>Next</button>
+        </div>
       </div>
     </div>
   );

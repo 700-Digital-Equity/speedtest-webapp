@@ -1,9 +1,9 @@
 import React from 'react';
 import styles from '../styles/leaderboard.module.css';
 
-export const LeaderboardTable = React.memo(function LeaderboardTable({ results, handleSort, sortKey, sortOrder }) {
+export const LeaderboardTable = React.memo(function LeaderboardTable({ results, handleSort, sortKey, sortOrder, compact }) {
   return (
-    <table className={styles.leaderboardTable}>
+    <table className={compact ? styles.leaderboardTableCompact : styles.leaderboardTable}>
       <thead>
         <tr>
           <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>

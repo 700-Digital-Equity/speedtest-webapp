@@ -1,3 +1,129 @@
+.dashboardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.dashboardCard {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 18px 18px 0 18px;
+  min-width: 320px;
+  max-width: 1100px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dashboardHeader {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 1100px) {
+  .dashboardGrid {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .dashboardCard {
+    max-width: 100vw;
+    min-width: 0;
+    margin: 0 auto;
+  }
+}
+
+/* Compact leaderboard table */
+.leaderboardTableCompact {
+  font-size: 14px;
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  color: inherit;
+}
+.leaderboardTableCompact th, .leaderboardTableCompact td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  word-break: break-word;
+  background: transparent;
+  color: inherit;
+}
+.leaderboardTableCompact th {
+  background: #f7f7fa;
+  font-weight: 600;
+  color: inherit;
+}
+.leaderboardTableCompact tr:last-child td {
+  border-bottom: none;
+}
+.leaderboardTableCompact tbody {
+  background: transparent;
+  color: inherit;
+}
+@media (max-width: 700px) {
+  .dashboardCard {
+    padding: 8px 2vw 0 2vw;
+  }
+  .leaderboardTableCompact th, .leaderboardTableCompact td {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboardCard {
+    max-width: 1400px;
+  }
+}
+
+@media (max-width: 500px) {
+  .dashboardCard {
+    padding: 2vw 1vw 0 1vw;
+  }
+}
+
+@media (max-width: 400px) {
+  .dashboardCard {
+    min-width: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .dashboardCard {
+    background: #23272f;
+    color: #f1f1f1;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+  .dashboardHeader {
+    color: #f1f1f1;
+  }
+  .leaderboardTableCompact th {
+    background: #23272f;
+    color: #f1f1f1;
+  }
+  .leaderboardTableCompact td {
+    color: #f1f1f1;
+  }
+  .leaderboardTableCompact th, .leaderboardTableCompact td {
+    border-bottom: 1px solid #444;
+  }
+}
+@media (max-width: 700px) {
+  .dashboardCard {
+    padding: 8px 2vw 0 2vw;
+  }
+  .leaderboardTableCompact th, .leaderboardTableCompact td {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+}
 .leaderboardContainer {
   max-width: 100%;
   margin: 40px auto;
