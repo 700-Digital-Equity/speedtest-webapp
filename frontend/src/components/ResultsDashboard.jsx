@@ -46,7 +46,7 @@ export default function ResultsDashboard({ results }) {
   const [sortOrder, setSortOrder] = useState('desc');
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [mapFullScreen, setMapFullScreen] = useState(false);
-  const [showFloatingTable, setShowFloatingTable] = useState(true);
+  const [showFloatingTable, setShowFloatingTable] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState('download');
   const [selectedLineGraph, setSelectedLineGraph] = useState('downloadUploadLine');
 

@@ -4,8 +4,16 @@ import { LeaderboardTable } from './LeaderboardTable';
 // Simple floating, draggable, resizable panel for the results table
 export default function FloatingResultsTable({ results, onClose, handleSort, sortKey, sortOrder }) {
   const panelRef = useRef(null);
-  const [pos, setPos] = useState({ x: 60, y: 60 });
-  const [size, setSize] = useState({ width: 600, height: 340 });
+  const [size, setSize] = useState({ width: 820, height: 340 });
+  // Center the panel by default
+  const [pos, setPos] = useState(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    return {
+      x: Math.max(0, Math.round((vw - 820) / 2)),
+      y: Math.max(0, Math.round((vh - 340) / 2)),
+    };
+  });
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
