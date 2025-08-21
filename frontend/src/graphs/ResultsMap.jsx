@@ -38,7 +38,7 @@ export default function ResultsMap({ results }) {
     <MapContainer center={center} zoom={11} style={{ height: 400, width: '100%' }}>
       <TileLayer
         attribution='&copy; OpenStreetMap contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
       {points.map((r, i) => (
         <Marker key={i} position={[r.lat, r.lon]}>
