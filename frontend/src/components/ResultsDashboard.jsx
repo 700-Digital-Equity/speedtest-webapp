@@ -1,4 +1,9 @@
 import React, { useState, useMemo } from 'react';
+import AnalysisSidebar from './AnalysisSidebar';
+import MetricBarChart from './MetricBarChart';
+import DownloadUploadLineGraph from '../graphs/DownloadUploadLineGraph';
+import LatencyJitterLineGraph from '../graphs/LatencyJitterLineGraph';
+import AverageSpeedByDayLineGraph from '../graphs/AverageSpeedByDayLineGraph';
 import ResultsMap from '../graphs/ResultsMap';
 import { LeaderboardTable } from './LeaderboardTable';
 
@@ -19,9 +24,21 @@ function isInBounds(lat, lon, bounds) {
 import styles from '../styles/leaderboard.module.css';
 
 export default function ResultsDashboard({ results }) {
+  // Sorting handler for leaderboard table
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortOrder('desc');
+    }
+  };
   const [visibleBounds, setVisibleBounds] = useState(null);
   const [sortKey, setSortKey] = useState('timestamp');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState('download');
+  const [selectedLineGraph, setSelectedLineGraph] = useState('downloadUploadLine');
 
   // Filter results to those within the current map bounds
   const filteredResults = useMemo(() => {
@@ -42,6 +59,28 @@ export default function ResultsDashboard({ results }) {
     });
     return filtered;
   }, [results, visibleBounds]);
+
+  // Prepare data for bar chart (simple histogram)
+  const analysisData = useMemo(() => {
+    const metric = selectedMetric;
+    const values = filteredResults.map(r => Number(r[metric])).filter(v => !isNaN(v));
+    if (!values.length) return [];
+    // Create histogram bins
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const binCount = 8;
+    const binSize = (max - min) / binCount || 1;
+    const bins = Array(binCount).fill(0);
+    values.forEach(v => {
+      let idx = Math.floor((v - min) / binSize);
+      if (idx >= binCount) idx = binCount - 1;
+      bins[idx]++;
+    });
+    return bins.map((count, i) => ({
+      label: `${(min + i * binSize).toFixed(1)}-${(min + (i + 1) * binSize).toFixed(1)}`,
+      value: count,
+    }));
+  }, [filteredResults, selectedMetric]);
 
   // Sorting logic for filtered results
   const sortedFilteredResults = useMemo(() => {
@@ -74,19 +113,25 @@ export default function ResultsDashboard({ results }) {
     return pageSlice;
   }, [sortedFilteredResults, page, pageSize]);
 
-  const handleSort = (key) => {
-    if (sortKey === key) {
-      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortOrder('desc');
-    }
-  };
-
+  // Metrics for analysis
+  const metrics = [
+    { value: 'download', label: 'Download Speed (Mbps)' },
+    { value: 'upload', label: 'Upload Speed (Mbps)' },
+    { value: 'latency', label: 'Latency (ms)' },
+    { value: 'jitter', label: 'Jitter (ms)' },
+  ];
+  const lineGraphTypes = [
+    { value: 'downloadUploadLine', label: 'Download/Upload Over Time' },
+    { value: 'latencyJitterLine', label: 'Latency/Jitter Over Time' },
+    { value: 'avgSpeedByDay', label: 'Average Speed by Day' },
+  ];
   return (
-    <div className={styles.dashboardGrid}>
+    <div className={styles.dashboardGrid} style={{ position: 'relative' }}>
       <div className={styles.dashboardCard} style={{height: 420}}>
-        <h2 className={styles.dashboardHeader}>Map</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 className={styles.dashboardHeader}>Map</h2>
+          <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
+        </div>
         <ResultsMap results={results} onBoundsChange={setVisibleBounds} />
       </div>
       <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
@@ -106,6 +151,53 @@ export default function ResultsDashboard({ results }) {
           <button onClick={() => setPage(page + 1)} disabled={page === totalPages} style={{ minWidth: 60 }}>Next</button>
         </div>
       </div>
+      {showAnalysis && (
+        <AnalysisSidebar
+          metrics={metrics}
+          selectedMetric={selectedMetric}
+          onSelectMetric={setSelectedMetric}
+          onClose={() => setShowAnalysis(false)}
+        >
+          <div style={{ marginBottom: 24 }}>
+            <MetricBarChart
+              data={analysisData}
+              label={metrics.find(m => m.value === selectedMetric)?.label || ''}
+              color="#4e79a7"
+            />
+          </div>
+          <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+            {lineGraphTypes.map(g => (
+              <button
+                key={g.value}
+                onClick={() => setSelectedLineGraph(g.value)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: selectedLineGraph === g.value ? '#4e79a7' : '#222',
+                  color: '#fff',
+                  fontWeight: selectedLineGraph === g.value ? 600 : 400,
+                  cursor: 'pointer',
+                  boxShadow: selectedLineGraph === g.value ? '0 2px 8px #0003' : 'none',
+                  outline: 'none',
+                  fontSize: 15,
+                }}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+          {selectedLineGraph === 'downloadUploadLine' && (
+            <DownloadUploadLineGraph results={filteredResults} />
+          )}
+          {selectedLineGraph === 'latencyJitterLine' && (
+            <LatencyJitterLineGraph results={filteredResults} />
+          )}
+          {selectedLineGraph === 'avgSpeedByDay' && (
+            <AverageSpeedByDayLineGraph results={filteredResults} />
+          )}
+        </AnalysisSidebar>
+      )}
     </div>
   );
 }
