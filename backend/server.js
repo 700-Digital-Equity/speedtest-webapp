@@ -17,7 +17,10 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',
   'https://700-digital-equity.digital',
   'https://speedtest-test-production.up.railway.app',
-  'https://speedtest-webapp-production.up.railway.app']
+  'https://speedtest-webapp-production.up.railway.app',
+  'https://nzspeedtest.up.railway.app'
+
+]
 
 const corsOptions = {
   origin(origin, cb) {
