@@ -1,10 +1,11 @@
+import styles from '../styles/leaderboard.module.css';
 import React, { useState, useMemo } from 'react';
 import AnalysisSidebar from './AnalysisSidebar';
 import MetricBarChart from './MetricBarChart';
 import DownloadUploadLineGraph from '../graphs/DownloadUploadLineGraph';
 import LatencyJitterLineGraph from '../graphs/LatencyJitterLineGraph';
 import AverageSpeedByDayLineGraph from '../graphs/AverageSpeedByDayLineGraph';
-import ResultsMap from '../graphs/ResultsMap';
+import ResultsHeatMap from '../graphs/ResultsHeatMap';
 import { LeaderboardTable } from './LeaderboardTable';
 
 // Helper to check if a point is within bounds (handles any order)
@@ -21,9 +22,15 @@ function isInBounds(lat, lon, bounds) {
 
 
 
-import styles from '../styles/leaderboard.module.css';
 
 export default function ResultsDashboard({ results }) {
+  // Get current tester's past results from localStorage
+  let userResults = [];
+  try {
+    userResults = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+  } catch (e) {
+    userResults = [];
+  }
   // Sorting handler for leaderboard table
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -132,7 +139,7 @@ export default function ResultsDashboard({ results }) {
           <h2 className={styles.dashboardHeader}>Map</h2>
           <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
         </div>
-        <ResultsMap results={results} onBoundsChange={setVisibleBounds} />
+  <ResultsHeatMap results={results} onBoundsChange={setVisibleBounds} userResults={userResults} />
       </div>
       <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
         <h2 className={styles.dashboardHeader}>Leaderboard</h2>
