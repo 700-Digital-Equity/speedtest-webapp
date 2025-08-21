@@ -4,7 +4,7 @@ import PracticeGraph from '../graphs/PracticeGraph';
 import { LeaderboardTable } from './LeaderboardTable';
 import Graph2 from '../graphs/Graph2';
 import { fetchResults } from '../utils/api';
-import ResultsMap from '../graphs/ResultsMap.jsx';
+import ResultsDashboard from './ResultsDashboard.jsx';
 
 export default function Leaderboard() {
   const [results, setResults] = useState([]);
@@ -73,25 +73,7 @@ export default function Leaderboard() {
         <p>No results yet.</p>
       ) : (
         <div className={styles.tableWrapper}>
-          <LeaderboardTable 
-            results={sortedResults}
-            handleSort={handleSort}
-            sortKey={sortKey}
-            sortOrder={sortOrder}
-          />
-
-          <div className={styles.pagination}>
-            <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
-            <span>Page {page} of {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
-          </div>
-
-          <div className={styles.graphBar}>
-            <PracticeGraph results={sortedResults} />
-            <Graph2 results={sortedResults} />
-            <ResultsMap results={sortedResults} />
-
-          </div>
+          <ResultsDashboard results={sortedResults} />
         </div>
       )}
     </div>
