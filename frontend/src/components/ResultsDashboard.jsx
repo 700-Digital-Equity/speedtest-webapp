@@ -148,7 +148,7 @@ export default function ResultsDashboard({ results }) {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                zIndex: 1000,
+                zIndex: 3000,
                 background: '#181c24',
                 boxShadow: 'none',
                 borderRadius: 0,
@@ -156,6 +156,8 @@ export default function ResultsDashboard({ results }) {
                 padding: 0,
                 display: 'flex',
                 flexDirection: 'column',
+                minWidth: 0,
+                maxWidth: '100vw',
               }
             : { height: 750, transition: 'height 0.2s', minWidth: 600, width: '100%' }
         }
@@ -186,7 +188,23 @@ export default function ResultsDashboard({ results }) {
               results={results}
               onBoundsChange={setVisibleBounds}
               userResults={userResults}
-              style={mapFullScreen ? { height: '100%', width: '100%' } : { height: '100%', width: '100%' }}
+              style={mapFullScreen
+                ? {
+                    height: '100vh',
+                    width: '100vw',
+                    minHeight: '100vh',
+                    minWidth: '100vw',
+                    maxHeight: '100vh',
+                    maxWidth: '100vw',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    zIndex: 3100,
+                    margin: 0,
+                    padding: 0,
+                  }
+                : { height: '100%', width: '100%' }
+              }
             />
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMapEvents } from 'react-leaflet';
 // Internal component to handle map events and report bounds (including initial mount)
 function BoundsReporter({ onBoundsChange }) {
@@ -93,6 +93,8 @@ function HeatmapLayer({ points }) {
   return null;
 }
 
+let leafletFullScreenCSSInjected = false;
+
 export default function ResultsHeatMap({ results, onBoundsChange, userResults = [], style }) {
   // Use raw points for the heatmap (no grid aggregation)
   const points = (results || [])
@@ -125,8 +127,72 @@ export default function ResultsHeatMap({ results, onBoundsChange, userResults = 
     ? [points[0][0], points[0][1]]
     : [-36.8485, 174.7633]; // Auckland default
 
+  // Ensure the map fills its parent, especially in full screen
+  const mergedStyle = {
+    height: '100%',
+    width: '100%',
+    ...style,
+  };
+
+  // Invalidate map size on mount and when style changes (e.g., full screen)
+  const mapRef = useRef();
+  useEffect(() => {
+    if (mapRef.current && mapRef.current._leaflet_id) {
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 100);
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+      }, 400);
+    }
+    // If in full screen, listen for window resize and invalidate size
+    let resizeHandler;
+    if (style && style.height === '100vh' && style.width === '100vw') {
+      resizeHandler = () => {
+        if (mapRef.current && mapRef.current._leaflet_id) {
+          mapRef.current.invalidateSize();
+        }
+      };
+      window.addEventListener('resize', resizeHandler);
+      // Set html/body to 100% height/width
+      document.documentElement.style.height = '100%';
+      document.documentElement.style.width = '100%';
+      document.body.style.height = '100%';
+      document.body.style.width = '100%';
+    }
+    return () => {
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+      // Optionally reset html/body height/width (not strictly necessary)
+    };
+  }, [style]);
+
+  // Inject global CSS for .leaflet-container to always fill parent
+  if (typeof document !== 'undefined' && !leafletFullScreenCSSInjected) {
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `
+      .leaflet-container {
+        height: 100% !important;
+        width: 100% !important;
+        min-height: 100% !important;
+        min-width: 100% !important;
+        max-height: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #181c24 !important;
+      }
+    `;
+    document.head.appendChild(styleTag);
+    leafletFullScreenCSSInjected = true;
+  }
   return (
-    <MapContainer center={center} zoom={11} style={style || { height: 400, width: '100%' }}>
+    <MapContainer
+      center={center}
+      zoom={11}
+      style={mergedStyle}
+      className="full-viewport-map"
+      whenCreated={mapInstance => { mapRef.current = mapInstance; }}
+    >
       <TileLayer
         attribution='&copy; OpenStreetMap contributors & CartoDB'
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
