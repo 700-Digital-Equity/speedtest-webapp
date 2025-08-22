@@ -1,3 +1,4 @@
+import RegionAverages from './RegionAverages';
 import FloatingResultsTable from './FloatingResultsTable';
 import styles from '../styles/leaderboard.module.css';
 import React, { useState, useMemo } from 'react';
@@ -50,25 +51,44 @@ export default function ResultsDashboard({ results }) {
   const [selectedMetric, setSelectedMetric] = useState('download');
   const [selectedLineGraph, setSelectedLineGraph] = useState('downloadUploadLine');
 
-  // Filter results to those within the current map bounds
-  const filteredResults = useMemo(() => {
-    if (!visibleBounds) return results;
-    const filtered = results.filter(r => {
-      let lat, lon;
-      if (r.geo && r.geo.type === 'Point' && Array.isArray(r.geo.coordinates)) {
-        lat = r.geo.coordinates[1];
-        lon = r.geo.coordinates[0];
-      } else if (typeof r.geo === 'string' && r.geo.includes(',')) {
-        const [latStr, lonStr] = r.geo.split(',').map(Number);
-        lat = latStr; lon = lonStr;
+  // Device type filter state
+  const [deviceTypeFilter, setDeviceTypeFilter] = useState('');
+  // Get all device types in the current results
+  const allDeviceTypes = useMemo(() => {
+    const types = new Set();
+    results.forEach(r => {
+      if (r.deviceModel && typeof r.deviceModel === 'string') {
+        const val = r.deviceModel.trim();
+        if (val && val.toLowerCase() !== 'auto') types.add(val);
       }
-      if (typeof lat === 'number' && typeof lon === 'number') {
-        return isInBounds(lat, lon, visibleBounds);
-      }
-      return false;
     });
+    return Array.from(types).sort();
+  }, [results]);
+
+  // Filter results to those within the current map bounds and device type
+  const filteredResults = useMemo(() => {
+    let filtered = results;
+    if (visibleBounds) {
+      filtered = filtered.filter(r => {
+        let lat, lon;
+        if (r.geo && r.geo.type === 'Point' && Array.isArray(r.geo.coordinates)) {
+          lat = r.geo.coordinates[1];
+          lon = r.geo.coordinates[0];
+        } else if (typeof r.geo === 'string' && r.geo.includes(',')) {
+          const [latStr, lonStr] = r.geo.split(',').map(Number);
+          lat = latStr; lon = lonStr;
+        }
+        if (typeof lat === 'number' && typeof lon === 'number') {
+          return isInBounds(lat, lon, visibleBounds);
+        }
+        return false;
+      });
+    }
+    if (deviceTypeFilter) {
+      filtered = filtered.filter(r => (r.deviceModel || '').trim() === deviceTypeFilter);
+    }
     return filtered;
-  }, [results, visibleBounds]);
+  }, [results, visibleBounds, deviceTypeFilter]);
 
   // Prepare data for bar chart (simple histogram)
   const analysisData = useMemo(() => {
@@ -162,9 +182,24 @@ export default function ResultsDashboard({ results }) {
             : { height: 750, transition: 'height 0.2s', minWidth: 600, width: '100%' }
         }
       >
+        {/* Region averages above map controls */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+          <RegionAverages results={filteredResults} />
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mapFullScreen ? '16px 24px 0 24px' : undefined }}>
           <h2 className={styles.dashboardHeader}>Map</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Device type filter dropdown */}
+            <select
+              value={deviceTypeFilter}
+              onChange={e => setDeviceTypeFilter(e.target.value)}
+              style={{ fontSize: 15, padding: '4px 10px', borderRadius: 4, border: '1px solid #4e79a7', background: '#181c24', color: '#fff', minWidth: 120 }}
+            >
+              <option value="">All Devices</option>
+              {allDeviceTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
             <button
               onClick={() => setMapFullScreen(f => !f)}
               style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#4e79a7', color: '#fff', border: 'none', cursor: 'pointer' }}
@@ -185,9 +220,9 @@ export default function ResultsDashboard({ results }) {
         <div style={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1, display: 'flex' }}>
             <ResultsHeatMap
-              results={results}
+              results={filteredResults}
               onBoundsChange={setVisibleBounds}
-              userResults={userResults}
+              userResults={deviceTypeFilter ? userResults.filter(r => (r.deviceModel || '').trim() === deviceTypeFilter) : userResults}
               style={mapFullScreen
                 ? {
                     height: '100vh',
@@ -245,6 +280,7 @@ export default function ResultsDashboard({ results }) {
           onSelectMetric={setSelectedMetric}
           onClose={() => setShowAnalysis(false)}
         >
+          <RegionAverages results={filteredResults} />
           <div style={{ marginBottom: 24 }}>
             <MetricBarChart
               data={analysisData}
