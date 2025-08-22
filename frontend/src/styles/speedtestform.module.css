@@ -1,3 +1,48 @@
+.inputEditRow {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+.inputEditRow input,
+.inputEditRow textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.inputEditRow button {
+  position: absolute;
+  right: -36px; /* sticks out to the right */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+@media (max-width: 600px) {
+  .inputEditRow button {
+    right: -24px;
+  }
+}
+.editBtn {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  color: #4f8cff;
+  font-size: 1.1em;
+  cursor: pointer;
+  vertical-align: middle;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+.editBtn:focus {
+  outline: 2px solid #4f8cff;
+}
+.editableInput {
+  background: #fffbe6; /* subtle yellow for user-editable fields */
+  border: 2px solid #ffe066;
+  color: var(--input-text);
+  box-shadow: 0 0 0 2px #ffe06633;
+}
+
 .formContainer {
   display: flex;
   flex-direction: column;
