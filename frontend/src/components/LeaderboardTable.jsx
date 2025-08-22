@@ -1,15 +1,24 @@
 import React from 'react';
 import styles from '../styles/leaderboard.module.css';
 
-export const LeaderboardTable = React.memo(function LeaderboardTable({ results, handleSort, sortKey, sortOrder }) {
+export const LeaderboardTable = React.memo(function LeaderboardTable({ results, handleSort, sortKey, sortOrder, compact }) {
   return (
-    <table className={styles.leaderboardTable}>
+    <table
+      className={compact ? styles.leaderboardTableCompact : styles.leaderboardTable}
+      style={{ tableLayout: 'fixed', width: '100%' }}
+    >
       <thead>
         <tr>
           <th onClick={() => handleSort('name')} style={{ cursor: 'pointer' }}>
             Name {sortKey === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
           </th>
-          <th onClick={() => handleSort('location')} style={{ cursor: 'pointer' }}>
+          <th onClick={() => handleSort('deviceModel')} style={{ cursor: 'pointer', width: 120, maxWidth: 140, minWidth: 80 }}>
+            Device {sortKey === 'deviceModel' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+          </th>
+          <th
+            onClick={() => handleSort('location')}
+            style={{ cursor: 'pointer', width: 180, maxWidth: 180, minWidth: 180 }}
+          >
             Location {sortKey === 'location' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
           </th>
           <th onClick={() => handleSort('ping')} style={{ cursor: 'pointer' }}>
@@ -30,7 +39,15 @@ export const LeaderboardTable = React.memo(function LeaderboardTable({ results, 
         {results.map((entry, i) => (
           <tr key={i}>
             <td>{entry.name}</td>
-            <td>{entry.location}</td>
+            <td style={{ width: 120, maxWidth: 140, minWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={entry.deviceModel}>
+              {entry.deviceModel || ''}
+            </td>
+            <td
+              style={{ width: 180, maxWidth: 180, minWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              title={entry.location}
+            >
+              {entry.location}
+            </td>
             <td>{entry.ping}</td>
             <td>{entry.download}</td>
             <td>{entry.upload}</td>

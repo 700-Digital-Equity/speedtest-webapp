@@ -15,26 +15,36 @@ const adaptiveDownload = async ({
   maxDuration = 25000,
   initialConcurrency = 2,
   maxConcurrency = 16,
-  timeThreshold = 10 // seconds — if download is faster than this, increase load
+  timeThreshold = 10, // seconds — if download is faster than this, increase load
+  onProgress, // Progress callback
 } = {}) => {
-  const startTime = performance.now();
+  const globalStartTime = performance.now();
   let totalBytes = 0;
   let concurrency = initialConcurrency;
-  // Use a variable to track which file size to use: 10, 100, or 250
   let fileSize = 10; // Start with 10MB
   let stopAll = false;
 
-  while (!stopAll && (performance.now() - startTime) < maxDuration) {
+  while (!stopAll && (performance.now() - globalStartTime) < maxDuration) {
     const download = async () => {
       try {
         const currentUrl = `${SERVER}/${fileSize}MB.bin`;
         const res = await fetch(`${currentUrl}?adaptive=${Math.random()}`);
         const reader = res.body.getReader();
+        let downloaded = 0;
+        const roundStart = performance.now();
+
         while (!stopAll) {
           const { done, value } = await reader.read();
           if (done) break;
           totalBytes += value.length;
-          if (performance.now() - startTime > maxDuration) {
+          downloaded += value.length;
+
+          // Calculate global speed in Mbps and call onProgress if available
+          const globalElapsed = (performance.now() - globalStartTime) / 1000;
+          const globalSpeed = (totalBytes * 8) / (globalElapsed * 1_000_000); // Mbps
+          if (onProgress) onProgress(globalSpeed, totalBytes, globalStartTime);
+
+          if (performance.now() - roundStart > maxDuration) {
             stopAll = true;
             break;
           }
@@ -50,7 +60,7 @@ const adaptiveDownload = async ({
     const roundDuration = (performance.now() - roundStart) / 1000;
 
     // If time is up, break out of the main loop immediately
-    if (performance.now() - startTime >= maxDuration) {
+    if (performance.now() - globalStartTime >= maxDuration) {
       stopAll = true;
       break;
     }
@@ -82,7 +92,10 @@ const adaptiveDownload = async ({
     }
   }
 
-  const duration = (performance.now() - startTime) / 1000;
+  const duration = (performance.now() - globalStartTime) / 1000;
+  const globalElapsed = (performance.now() - globalStartTime) / 1000;
+  const globalSpeed = (totalBytes * 8) / (globalElapsed * 1_000_000); // Mbps
+  if (onProgress) onProgress(globalSpeed, totalBytes, globalStartTime);
   return ((totalBytes * 8) / duration / 1_000_000).toFixed(2); // Mbps
 };
 
@@ -92,9 +105,10 @@ const adaptiveUpload = async ({
   initialSizeMB = 30,
   maxBlobSizeMB = 500,
   maxConcurrency = 4,
-  timeThreshold = 7 // seconds — if upload is faster than this, increase load
+  timeThreshold = 7, // seconds — if upload is faster than this, increase load
+  onProgress // Progress callback
 } = {}) => {
-  const startTime = performance.now();
+  const globalStartTime = performance.now();
   let totalBytesUploaded = 0;
   let totalUploadTime = 0;
 
@@ -120,7 +134,7 @@ const adaptiveUpload = async ({
     // Ignore warm-up failure
   }
 
-  while ((performance.now() - startTime) < maxDuration) {
+  while ((performance.now() - globalStartTime) < maxDuration) {
     const blob = createBlob(currentBlobSizeMB);
     const roundStart = performance.now();
 
@@ -131,6 +145,11 @@ const adaptiveUpload = async ({
           body: blob,
         }, 15000);
         totalBytesUploaded += blob.size;
+
+        // Live upload progress update
+        const globalElapsed = (performance.now() - globalStartTime) / 1000;
+        const globalSpeed = (totalBytesUploaded * 8) / (globalElapsed * 1_000_000); // Mbps
+        if (onProgress) onProgress(globalSpeed.toFixed(2), totalBytesUploaded, globalStartTime);
       } catch (_) {
         // Ignore failed uploads
       }
@@ -142,7 +161,7 @@ const adaptiveUpload = async ({
     totalUploadTime += roundDuration;
 
     // Exit if maxDuration is reached
-    if ((performance.now() - startTime) >= maxDuration) break;
+    if ((performance.now() - globalStartTime) >= maxDuration) break;
 
     // Adapt concurrency and blob size: increase concurrency first, then blob size
     if (roundDuration < timeThreshold) {
@@ -160,6 +179,7 @@ const adaptiveUpload = async ({
   if (totalUploadTime === 0) return "0";
 
   const uploadMbps = ((totalBytesUploaded * 8) / totalUploadTime / 1_000_000).toFixed(2);
+  if (onProgress) onProgress(uploadMbps, totalBytesUploaded, globalStartTime);
   return uploadMbps;
 };
 
