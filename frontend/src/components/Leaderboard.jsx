@@ -66,7 +66,7 @@ export default function Leaderboard() {
 
   return (
     <div className={styles.leaderboardContainer}>
-      <h1>Leaderboard</h1>
+      <h1>Results Map</h1>
       {loading ? (
         <p>Loading...</p>
       ) : sortedResults.length === 0 ? (

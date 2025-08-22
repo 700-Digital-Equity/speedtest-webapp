@@ -65,6 +65,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       }}
       className={style.formContainer}
     >
+      <h2 style={{marginBottom: 8, marginTop: 0}}>Your Information (Editable)</h2>
       <label className={style.label}>Name <span style={{ color: 'red' }}>*</span></label>
       <div className={style.inputEditRow} style={{ position: 'relative' }}>
         <input
@@ -74,7 +75,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           onChange={e => setName(e.target.value)}
           required
           className={style.input}
-          // always editable
         />
         <button
           type="button"
@@ -94,7 +94,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           value={location}
           onChange={e => { setLocation(e.target.value); setUserEditedLocation(true); }}
           className={style.input}
-          // always editable
         />
         <button
           type="button"
@@ -114,7 +113,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           value={deviceModel}
           onChange={e => setDeviceModel(e.target.value)}
           className={style.input}
-          // always editable
         />
         <button
           type="button"
@@ -133,7 +131,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           onChange={e => setConnectionType(e.target.value)}
           className={style.select}
           style={{ width: '100%' }}
-          // always enabled
         >
           <option value="">Select connection</option>
           <option value="WiFi">WiFi</option>
@@ -158,7 +155,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
             onChange={e => setCustomConnectionType(e.target.value)}
             placeholder="Describe your connection"
             className={style.input}
-            // always editable
           />
           <button
             type="button"
@@ -178,7 +174,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           onChange={e => setNotes(e.target.value)}
           placeholder="Any notes about your test or setup?"
           className={style.textarea}
-          // always editable
         />
         <button
           type="button"
@@ -190,7 +185,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
         </button>
       </div>
 
-      {/* Extra metrics (read-only, auto-populated) */}
+      <h2 style={{marginTop: 32, marginBottom: 8}}>Auto-Detected Information</h2>
       <label className={style.label}>ISP</label>
       <input type="text" value={isp} readOnly className={style.input} />
 
