@@ -5,11 +5,12 @@ import platform from 'platform';
 
 
 export default function SpeedTestForm({ isRunning, onSubmit }) {
-  const [name, setName] = useState('Anonymous');
+  // Load from localStorage if available
+  const [name, setName] = useState(() => localStorage.getItem('speedtest_name') || 'Anonymous');
+  const [deviceModel, setDeviceModel] = useState(() => localStorage.getItem('speedtest_deviceModel') || '');
+  const [connectionType, setConnectionType] = useState(() => localStorage.getItem('speedtest_connectionType') || '');
   const [location, setLocation] = useState('');
   const [userEditedLocation, setUserEditedLocation] = useState(false);
-  const [deviceModel, setDeviceModel] = useState('');
-  const [connectionType, setConnectionType] = useState('');
   const [customConnectionType, setCustomConnectionType] = useState('');
   const [notes, setNotes] = useState('');
   const [isp, setISP] = useState('');
@@ -72,7 +73,10 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           type="text"
           placeholder="Enter your name"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => {
+            setName(e.target.value);
+            localStorage.setItem('speedtest_name', e.target.value);
+          }}
           required
           className={style.input}
         />
@@ -111,7 +115,10 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           type="text"
           placeholder="e.g. MacBook Pro, Galaxy S23"
           value={deviceModel}
-          onChange={e => setDeviceModel(e.target.value)}
+          onChange={e => {
+            setDeviceModel(e.target.value);
+            localStorage.setItem('speedtest_deviceModel', e.target.value);
+          }}
           className={style.input}
         />
         <button
@@ -128,7 +135,10 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       <div className={style.inputEditRow} style={{ position: 'relative' }}>
         <select
           value={connectionType}
-          onChange={e => setConnectionType(e.target.value)}
+          onChange={e => {
+            setConnectionType(e.target.value);
+            localStorage.setItem('speedtest_connectionType', e.target.value);
+          }}
           className={style.select}
           style={{ width: '100%' }}
         >
