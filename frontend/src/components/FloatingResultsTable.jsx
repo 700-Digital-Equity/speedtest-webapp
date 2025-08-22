@@ -58,40 +58,56 @@ export default function FloatingResultsTable({ results, onClose, handleSort, sor
   });
 
   return (
-    <div
-      ref={panelRef}
-      style={{
-        position: 'fixed',
-        left: pos.x,
-        top: pos.y,
-        width: size.width,
-        height: size.height,
-        background: '#232837ee',
-        border: '2px solid #4e79a7',
-        borderRadius: 10,
-        zIndex: 2000,
-        boxShadow: '0 4px 32px #000a',
-        display: 'flex',
-        flexDirection: 'column',
-        userSelect: dragging || resizing ? 'none' : 'auto',
-        transition: dragging || resizing ? 'none' : 'box-shadow 0.2s',
-      }}
-    >
+    <>
+      <style>{`
+        :root {
+          --float-bg: #232837ee;
+          --float-fg: #fff;
+          --float-border: #4e79a7;
+        }
+        @media (prefers-color-scheme: light) {
+          :root {
+            --float-bg: #fff;
+            --float-fg: #232837;
+            --float-border: #4e79a7;
+          }
+        }
+      `}</style>
       <div
+        ref={panelRef}
         style={{
-          cursor: 'move',
-          background: '#4e79a7',
-          color: '#fff',
-          padding: '8px 16px',
-          borderTopLeftRadius: 8,
-          borderTopRightRadius: 8,
-          fontWeight: 600,
+          position: 'fixed',
+          left: pos.x,
+          top: pos.y,
+          width: size.width,
+          height: size.height,
+          background: 'var(--float-bg, #232837ee)',
+          color: 'var(--float-fg, #fff)',
+          border: '2px solid var(--float-border, #4e79a7)',
+          borderRadius: 10,
+          zIndex: 2000,
+          boxShadow: '0 4px 32px #000a',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
+          userSelect: dragging || resizing ? 'none' : 'auto',
+          transition: dragging || resizing ? 'none' : 'box-shadow 0.2s',
         }}
-        onMouseDown={onMouseDownDrag}
       >
+        <div
+          style={{
+            cursor: 'move',
+            background: 'var(--float-border, #4e79a7)',
+            color: 'var(--float-fg, #fff)',
+            padding: '8px 16px',
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+          onMouseDown={onMouseDownDrag}
+        >
         Results in View
         <button
           onClick={onClose}
@@ -101,15 +117,15 @@ export default function FloatingResultsTable({ results, onClose, handleSort, sor
           ×
         </button>
       </div>
-      <div style={{ flex: 1, overflow: 'auto', background: 'inherit', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
-        <LeaderboardTable
-          results={results}
-          compact
-          handleSort={handleSort}
-          sortKey={sortKey}
-          sortOrder={sortOrder}
-        />
-      </div>
+        <div style={{ flex: 1, overflow: 'auto', background: 'inherit', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
+          <LeaderboardTable
+            results={results}
+            compact
+            handleSort={handleSort}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
+          />
+        </div>
       <div
         style={{
           position: 'absolute',
@@ -125,6 +141,7 @@ export default function FloatingResultsTable({ results, onClose, handleSort, sor
       >
         <svg width="18" height="18"><polyline points="0,18 18,0" stroke="#4e79a7" strokeWidth="3" fill="none" /></svg>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

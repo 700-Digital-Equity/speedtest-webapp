@@ -1,3 +1,4 @@
+import MetricTimeBarChart from './MetricTimeBarChart';
 import RegionAverages from './RegionAverages';
 import FloatingResultsTable from './FloatingResultsTable';
 import styles from '../styles/leaderboard.module.css';
@@ -301,9 +302,25 @@ export default function ResultsDashboard({ results }) {
             onSelectMetric={setSelectedMetric}
             onClose={() => setShowAnalysis(false)}
           >
-            <MetricBarChart
-              data={analysisData}
-              label={metrics.find(m => m.value === selectedMetric)?.label || ''}
+            {/* Device model filter for bar chart */}
+            <div style={{ marginBottom: 16 }}>
+              <label htmlFor="analysis-device-model" style={{ fontWeight: 500, marginRight: 8 }}>Device:</label>
+              <select
+                id="analysis-device-model"
+                value={deviceTypeFilter}
+                onChange={e => setDeviceTypeFilter(e.target.value)}
+                style={{ fontSize: 15, padding: '4px 10px', borderRadius: 4, border: '1px solid #4e79a7', background: '#181c24', color: '#fff', minWidth: 120 }}
+              >
+                <option value="">All Devices</option>
+                {allDeviceTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            {/* Time-based bar chart for selected metric, filtered by device */}
+            <MetricTimeBarChart
+              results={deviceTypeFilter ? filteredResults.filter(r => (r.deviceModel || '').trim() === deviceTypeFilter) : filteredResults}
+              metric={selectedMetric}
               color="#4e79a7"
             />
             <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>

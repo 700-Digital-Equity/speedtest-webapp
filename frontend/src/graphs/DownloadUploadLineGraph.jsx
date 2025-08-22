@@ -26,16 +26,20 @@ export default function DownloadUploadLineGraph({ results }) {
       },
     ],
   };
+  // Detect light/dark mode
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const axisColor = isDark ? '#fff' : '#222';
+  const gridColor = isDark ? '#333' : '#ccc';
   const options = {
     responsive: true,
     plugins: {
-      legend: { labels: { color: '#fff' } },
+      legend: { labels: { color: axisColor } },
       title: { display: false },
       tooltip: { mode: 'index', intersect: false },
     },
     scales: {
-      x: { ticks: { color: '#fff', maxTicksLimit: 8 }, grid: { color: '#333' } },
-      y: { ticks: { color: '#fff' }, grid: { color: '#333' } },
+      x: { ticks: { color: axisColor, maxTicksLimit: 8 }, grid: { color: gridColor } },
+      y: { ticks: { color: axisColor }, grid: { color: gridColor } },
     },
   };
   return <Line data={data} options={options} />;
