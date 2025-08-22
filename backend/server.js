@@ -131,8 +131,14 @@ app.post('/api/auth/code', async (req, res) => {
 });
 
 app.post('/api/auth/guest', async (req, res) => {
-  const { name } = req.body || {};
-  if (!name) return res.status(400).json({ error: 'name_required' });
+  let { name } = req.body || {};
+  // If no name provided, generate anonymous name or allow null
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    // Option 1: generate anonymous name
+    // name = `Guest${Math.floor(100000 + Math.random() * 900000)}`;
+    // Option 2: allow null/empty name
+    name = null;
+  }
   const user = await UserModel.create({ name, schoolId: null });
   setSession(res, { uid: user._id.toString(), sid: null });
   res.json({ user: { id: user._id, name: user.name, schoolId: null } });
