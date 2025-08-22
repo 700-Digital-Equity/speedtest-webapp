@@ -103,24 +103,59 @@ export default function LiveGraph({ downloadHistory, uploadHistory }) {
     },
   };
 
+  // Light/dark mode adaptive card style
+  const cardStyle = {
+    maxWidth: 700,
+    minWidth: 350,
+    height: 340,
+    margin: '32px auto 0 auto',
+    background: 'var(--live-bg, #232837ee)',
+    color: 'var(--live-fg, #fff)',
+    borderRadius: 18,
+    boxShadow: '0 6px 32px #0005',
+    border: '1.5px solid var(--live-border, #4e79a7)',
+    backdropFilter: 'blur(2px)',
+    zIndex: 1200,
+    position: 'relative',
+    padding: 12,
+    display: 'flex',
+    flexDirection: 'column',
+    transition: 'background 0.2s, color 0.2s',
+  };
   return (
-    <div style={{ maxWidth: 700, minWidth: 350, height: 340, margin: '0 auto', background: 'none' }}>
-      <Line
-        data={data}
-        options={{
-          ...options,
-          maintainAspectRatio: false,
-          scales: {
-            ...options.scales,
-            y: {
-              ...options.scales.y,
-              // Optionally, set a higher max for y-axis for more zoom
-              // max: 1000,
+    <>
+      <style>{`
+        :root {
+          --live-bg: #232837ee;
+          --live-fg: #fff;
+          --live-border: #4e79a7;
+        }
+        @media (prefers-color-scheme: light) {
+          :root {
+            --live-bg: #fff;
+            --live-fg: #232837;
+            --live-border: #4e79a7;
+          }
+        }
+      `}</style>
+      <div style={cardStyle}>
+        <Line
+          data={data}
+          options={{
+            ...options,
+            maintainAspectRatio: false,
+            scales: {
+              ...options.scales,
+              y: {
+                ...options.scales.y,
+                // Optionally, set a higher max for y-axis for more zoom
+                // max: 1000,
+              },
             },
-          },
-        }}
-        height={320}
-      />
-    </div>
+          }}
+          height={320}
+        />
+      </div>
+    </>
   );
 }

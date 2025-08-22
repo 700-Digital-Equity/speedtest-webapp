@@ -5,8 +5,7 @@ import { getISPInfo, pingTest, getBrowserLocation, getDeviceInfo, getConnectionI
 import SpeedTestForm from './SpeedTestForm.jsx';
 import TestResultsZone from './TestResultZone.jsx';
 import { postResult, fetchResults } from '../utils/api';
-import LiveResults from './LiveResults.jsx';
-import LiveGraph from '../graphs/LiveGraph.jsx';
+import LiveTestPanel from './LiveTestPanel.jsx';
 import ResultsMap from '../graphs/ResultsMap.jsx';
 
 export default function SpeedTest() {
@@ -282,19 +281,15 @@ const runTest = async (formData) => {
       />
 
       {isRunning && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', alignItems: 'flex-start' }}>
-          <LiveResults
-            ping={livePing}
-            jitter={liveJitter}
-            packetLoss={livePacketLoss}
-            download={liveDownload}
-            upload={liveUpload}
-          />
-          <LiveGraph
-            downloadHistory={liveDownloadHistory}
-            uploadHistory={liveUploadHistory}
-          />
-        </div>
+        <LiveTestPanel
+          ping={livePing}
+          jitter={liveJitter}
+          packetLoss={livePacketLoss}
+          download={liveDownload}
+          upload={liveUpload}
+          downloadHistory={liveDownloadHistory}
+          uploadHistory={liveUploadHistory}
+        />
       )}
     </>
   );
