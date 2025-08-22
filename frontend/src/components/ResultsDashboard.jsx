@@ -156,171 +156,190 @@ export default function ResultsDashboard({ results }) {
     { value: 'avgSpeedByDay', label: 'Average Speed by Day' },
   ];
   return (
-  <div className={styles.dashboardGrid} style={{ position: 'relative', minWidth: 1100, width: '100%', maxWidth: 1600, margin: '0 auto' }}>
-      {/* Map Card (normal or fullscreen) */}
-      <div
-        className={styles.dashboardCard}
-        style={
-          mapFullScreen
-            ? {
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                width: '100vw',
-                height: '100vh',
-                zIndex: 3000,
-                background: '#181c24',
-                boxShadow: 'none',
-                borderRadius: 0,
-                margin: 0,
-                padding: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                minWidth: 0,
-                maxWidth: '100vw',
-              }
-            : { height: 750, transition: 'height 0.2s', minWidth: 600, width: '100%' }
-        }
-      >
-        {/* Region averages above map controls */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
-          <RegionAverages results={filteredResults} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: mapFullScreen ? '16px 24px 0 24px' : undefined }}>
-          <h2 className={styles.dashboardHeader}>Map</h2>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Device type filter dropdown */}
-            <select
-              value={deviceTypeFilter}
-              onChange={e => setDeviceTypeFilter(e.target.value)}
-              style={{ fontSize: 15, padding: '4px 10px', borderRadius: 4, border: '1px solid #4e79a7', background: '#181c24', color: '#fff', minWidth: 120 }}
-            >
-              <option value="">All Devices</option>
-              {allDeviceTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => setMapFullScreen(f => !f)}
-              style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#4e79a7', color: '#fff', border: 'none', cursor: 'pointer' }}
-              title={mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-            >
-              {mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-            </button>
-            <button
-              onClick={() => setShowFloatingTable(f => !f)}
-              style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#e15759', color: '#fff', border: 'none', cursor: 'pointer' }}
-              title={showFloatingTable ? 'Hide Results Table' : 'Show Results Table'}
-            >
-              {showFloatingTable ? 'Hide Table' : 'Show Table'}
-            </button>
-            <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
-          </div>
-        </div>
-        <div style={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flex: 1, display: 'flex' }}>
+    <>
+      {/* Full Screen Map Overlay */}
+      {mapFullScreen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 3000,
+            background: '#181c24',
+            margin: 0,
+            padding: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <div style={{ width: '100vw', height: '100vh', position: 'relative', flex: 1 }}>
             <ResultsHeatMap
               results={filteredResults}
               onBoundsChange={setVisibleBounds}
               userResults={deviceTypeFilter ? userResults.filter(r => (r.deviceModel || '').trim() === deviceTypeFilter) : userResults}
-              style={mapFullScreen
-                ? {
-                    height: '100vh',
-                    width: '100vw',
-                    minHeight: '100vh',
-                    minWidth: '100vw',
-                    maxHeight: '100vh',
-                    maxWidth: '100vw',
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    zIndex: 3100,
-                    margin: 0,
-                    padding: 0,
-                  }
-                : { height: '100%', width: '100%' }
-              }
+              style={{ height: '100%', width: '100%' }}
             />
+            {/* Region averages: top left, offset to avoid map controls */}
+            <div style={{ position: 'absolute', top: 16, left: 180, zIndex: 3500, background: 'rgba(24,28,36,0.92)', borderRadius: 8, padding: '8px 18px', boxShadow: '0 2px 8px #0003' }}>
+              <RegionAverages results={filteredResults} />
+            </div>
+            {/* Control buttons and device filter: top right */}
+            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 3600, display: 'flex', gap: 10, alignItems: 'center' }}>
+              {/* Device type filter dropdown */}
+              <select
+                value={deviceTypeFilter}
+                onChange={e => setDeviceTypeFilter(e.target.value)}
+                style={{ fontSize: 15, padding: '4px 10px', borderRadius: 4, border: '1px solid #4e79a7', background: '#181c24', color: '#fff', minWidth: 120 }}
+              >
+                <option value="">All Devices</option>
+                {allDeviceTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setMapFullScreen(false)}
+                style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#4e79a7', color: '#fff', border: 'none', cursor: 'pointer' }}
+                title="Exit Full Screen"
+              >
+                Exit Full Screen
+              </button>
+              <button
+                onClick={() => setShowFloatingTable(f => !f)}
+                style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#e15759', color: '#fff', border: 'none', cursor: 'pointer' }}
+                title={showFloatingTable ? 'Hide Results Table' : 'Show Results Table'}
+              >
+                {showFloatingTable ? 'Hide Table' : 'Show Table'}
+              </button>
+            </div>
+            {/* Floating Results Table in full screen */}
+            {showFloatingTable && (
+              <FloatingResultsTable
+                results={sortedFilteredResults}
+                onClose={() => setShowFloatingTable(false)}
+                handleSort={handleSort}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+              />
+            )}
           </div>
         </div>
-        <div style={{ textAlign: 'center', marginTop: 8, fontSize: 15, color: '#4e79a7' }}>
-          Showing <b>{filteredResults.length}</b> result{filteredResults.length === 1 ? '' : 's'} in this area
-        </div>
-        {showFloatingTable && (
-          <FloatingResultsTable
-            results={sortedFilteredResults}
-            onClose={() => setShowFloatingTable(false)}
-            handleSort={handleSort}
-            sortKey={sortKey}
-            sortOrder={sortOrder}
-          />
+      )}
+      {/* Main Dashboard Grid */}
+      <div className={styles.dashboardGrid} style={{ position: 'relative', minWidth: 1100, width: '100%', maxWidth: 1600, margin: '0 auto' }}>
+        {/* Map Card (hidden when full screen) */}
+        {!mapFullScreen && (
+          <div
+            className={styles.dashboardCard}
+            style={{ height: 750, transition: 'height 0.2s', minWidth: 600, width: '100%' }}
+          >
+            {/* Region averages above map controls */}
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+              <RegionAverages results={filteredResults} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: undefined }}>
+              <h2 className={styles.dashboardHeader}>Map</h2>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {/* Device type filter dropdown */}
+                <select
+                  value={deviceTypeFilter}
+                  onChange={e => setDeviceTypeFilter(e.target.value)}
+                  style={{ fontSize: 15, padding: '4px 10px', borderRadius: 4, border: '1px solid #4e79a7', background: '#181c24', color: '#fff', minWidth: 120 }}
+                >
+                  <option value="">All Devices</option>
+                  {allDeviceTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setMapFullScreen(f => !f)}
+                  style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#4e79a7', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  title={mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+                >
+                  {mapFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+                </button>
+                <button
+                  onClick={() => setShowFloatingTable(f => !f)}
+                  style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#e15759', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  title={showFloatingTable ? 'Hide Results Table' : 'Show Results Table'}
+                >
+                  {showFloatingTable ? 'Hide Table' : 'Show Table'}
+                </button>
+                <button onClick={() => setShowAnalysis(true)} style={{ fontSize: 15, padding: '4px 12px', borderRadius: 4, background: '#222', color: '#fff', border: 'none', cursor: 'pointer' }}>Analysis</button>
+              </div>
+            </div>
+            <div style={{ flex: 1, minHeight: 320, display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+              <div style={{ flex: 1, display: 'flex', height: '100%', position: 'relative' }}>
+                <ResultsHeatMap
+                  results={filteredResults}
+                  onBoundsChange={setVisibleBounds}
+                  userResults={deviceTypeFilter ? userResults.filter(r => (r.deviceModel || '').trim() === deviceTypeFilter) : userResults}
+                  style={{ height: '100%', width: '100%' }}
+                />
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 8, fontSize: 15, color: '#4e79a7' }}>
+              Showing <b>{filteredResults.length}</b> result{filteredResults.length === 1 ? '' : 's'} in this area
+            </div>
+            {showFloatingTable && (
+              <FloatingResultsTable
+                results={sortedFilteredResults}
+                onClose={() => setShowFloatingTable(false)}
+                handleSort={handleSort}
+                sortKey={sortKey}
+                sortOrder={sortOrder}
+              />
+            )}
+          </div>
         )}
-      </div>
-  <div className={styles.dashboardCard} style={{height: 420, overflow: 'hidden', display: 'flex', flexDirection: 'column', minWidth: 480, width: '100%' }}>
-        <h2 className={styles.dashboardHeader}>Leaderboard</h2>
-        <div style={{flex: 1, overflow: 'auto'}}>
-          <LeaderboardTable 
-            results={pagedResults}
-            handleSort={handleSort}
-            sortKey={sortKey}
-            sortOrder={sortOrder}
-            compact
-          />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '8px 0' }}>
-          <button onClick={() => setPage(page - 1)} disabled={page === 1} style={{ minWidth: 60 }}>Prev</button>
-          <span style={{ fontSize: 15 }}>Page {page} of {totalPages}</span>
-          <button onClick={() => setPage(page + 1)} disabled={page === totalPages} style={{ minWidth: 60 }}>Next</button>
-        </div>
-      </div>
-      {showAnalysis && (
-        <AnalysisSidebar
-          metrics={metrics}
-          selectedMetric={selectedMetric}
-          onSelectMetric={setSelectedMetric}
-          onClose={() => setShowAnalysis(false)}
-        >
-          <RegionAverages results={filteredResults} />
-          <div style={{ marginBottom: 24 }}>
+        {/* ...rest of dashboard grid... */}
+        {showAnalysis && (
+          <AnalysisSidebar
+            metrics={metrics}
+            selectedMetric={selectedMetric}
+            onSelectMetric={setSelectedMetric}
+            onClose={() => setShowAnalysis(false)}
+          >
             <MetricBarChart
               data={analysisData}
               label={metrics.find(m => m.value === selectedMetric)?.label || ''}
               color="#4e79a7"
             />
-          </div>
-          <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-            {lineGraphTypes.map(g => (
-              <button
-                key={g.value}
-                onClick={() => setSelectedLineGraph(g.value)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 6,
-                  border: 'none',
-                  background: selectedLineGraph === g.value ? '#4e79a7' : '#222',
-                  color: '#fff',
-                  fontWeight: selectedLineGraph === g.value ? 600 : 400,
-                  cursor: 'pointer',
-                  boxShadow: selectedLineGraph === g.value ? '0 2px 8px #0003' : 'none',
-                  outline: 'none',
-                  fontSize: 15,
-                }}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-          {selectedLineGraph === 'downloadUploadLine' && (
-            <DownloadUploadLineGraph results={filteredResults} />
-          )}
-          {selectedLineGraph === 'latencyJitterLine' && (
-            <LatencyJitterLineGraph results={filteredResults} />
-          )}
-          {selectedLineGraph === 'avgSpeedByDay' && (
-            <AverageSpeedByDayLineGraph results={filteredResults} />
-          )}
-        </AnalysisSidebar>
-      )}
-    </div>
+            <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
+              {lineGraphTypes.map(g => (
+                <button
+                  key={g.value}
+                  onClick={() => setSelectedLineGraph(g.value)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 6,
+                    border: 'none',
+                    background: selectedLineGraph === g.value ? '#4e79a7' : '#222',
+                    color: '#fff',
+                    fontWeight: selectedLineGraph === g.value ? 600 : 400,
+                    cursor: 'pointer',
+                    boxShadow: selectedLineGraph === g.value ? '0 2px 8px #0003' : 'none',
+                    outline: 'none',
+                    fontSize: 15,
+                  }}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+            {selectedLineGraph === 'downloadUploadLine' && (
+              <DownloadUploadLineGraph results={filteredResults} />
+            )}
+            {selectedLineGraph === 'latencyJitterLine' && (
+              <LatencyJitterLineGraph results={filteredResults} />
+            )}
+            {selectedLineGraph === 'avgSpeedByDay' && (
+              <AverageSpeedByDayLineGraph results={filteredResults} />
+            )}
+          </AnalysisSidebar>
+        )}
+      </div>
+    </>
   );
 }

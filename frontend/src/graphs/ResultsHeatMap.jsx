@@ -138,31 +138,20 @@ export default function ResultsHeatMap({ results, onBoundsChange, userResults = 
   const mapRef = useRef();
   useEffect(() => {
     if (mapRef.current && mapRef.current._leaflet_id) {
+      mapRef.current.invalidateSize();
       setTimeout(() => {
         mapRef.current.invalidateSize();
-      }, 100);
-      setTimeout(() => {
+      }, 300);
+    }
+    // Listen for window resize in all modes
+    const resizeHandler = () => {
+      if (mapRef.current && mapRef.current._leaflet_id) {
         mapRef.current.invalidateSize();
-      }, 400);
-    }
-    // If in full screen, listen for window resize and invalidate size
-    let resizeHandler;
-    if (style && style.height === '100vh' && style.width === '100vw') {
-      resizeHandler = () => {
-        if (mapRef.current && mapRef.current._leaflet_id) {
-          mapRef.current.invalidateSize();
-        }
-      };
-      window.addEventListener('resize', resizeHandler);
-      // Set html/body to 100% height/width
-      document.documentElement.style.height = '100%';
-      document.documentElement.style.width = '100%';
-      document.body.style.height = '100%';
-      document.body.style.width = '100%';
-    }
+      }
+    };
+    window.addEventListener('resize', resizeHandler);
     return () => {
-      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
-      // Optionally reset html/body height/width (not strictly necessary)
+      window.removeEventListener('resize', resizeHandler);
     };
   }, [style]);
 
