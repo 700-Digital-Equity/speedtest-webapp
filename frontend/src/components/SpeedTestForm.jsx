@@ -45,18 +45,18 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
   //   if (autoLocation && !userEditedLocation) setLocation(autoLocation);
   // }, [autoLocation, userEditedLocation]);
 
+  // Updated to send 'Anonymous' as the name without displaying the field
   return (
     <form
       onSubmit={e => {
         e.preventDefault();
         onSubmit({
-          name,
+          name: 'Anonymous', // Always send 'Anonymous' as the name
           location,
           deviceModel,
           os,
           connectionType,
           customConnectionType,
-          notes,
           isp,
           ip,
           geo,
@@ -67,28 +67,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
       className={style.formContainer}
     >
       <h2 style={{marginBottom: 8, marginTop: 0}}>Your Information (Editable)</h2>
-      <label className={style.label}>Name <span style={{ color: 'red' }}>*</span></label>
-      <div className={style.inputEditRow} style={{ position: 'relative' }}>
-        <input
-          type="text"
-          placeholder="Enter your name"
-          value={name}
-          onChange={e => {
-            setName(e.target.value);
-            localStorage.setItem('speedtest_name', e.target.value);
-          }}
-          required
-          className={style.input}
-        />
-        <button
-          type="button"
-          className={style.editBtn}
-          aria-label="Edit Name"
-          tabIndex={-1}
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-        </button>
-      </div>
 
       <label className={style.label}>Location</label>
       <div className={style.inputEditRow} style={{ position: 'relative' }}>
@@ -176,24 +154,6 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
           </button>
         </div>
       )}
-
-      <label className={style.label}>Notes</label>
-      <div className={style.inputEditRow} style={{ position: 'relative' }}>
-        <textarea
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          placeholder="Any notes about your test or setup?"
-          className={style.textarea}
-        />
-        <button
-          type="button"
-          className={style.editBtn}
-          aria-label="Edit Notes"
-          tabIndex={-1}
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-        </button>
-      </div>
 
       <h2 style={{marginTop: 32, marginBottom: 8}}>Auto-Detected Information</h2>
       <label className={style.label}>ISP</label>
