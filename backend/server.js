@@ -117,12 +117,12 @@ app.get('/results', async (req, res) => {
 // Auth endpoints
 app.post('/api/auth/code', async (req, res) => {
   const { name, code } = req.body || {};
-  if (!name || !code) return res.status(400).json({ error: 'name_and_code_required' });
+  if (!code) return res.status(400).json({ error: 'name_and_code_required' });
 
   const school = await verifySchoolCode(code);
   if (!school) return res.status(401).json({ error: 'invalid_or_expired_code' });
 
-  const user = await UserModel.create({ name, schoolId: school._id });
+  const user = await UserModel.create({ name: school.name, schoolId: school._id });
   if (school.maxUses > 0) {
     await SchoolModel.updateOne({ _id: school._id }, { $inc: { used: 1 } });
   }
