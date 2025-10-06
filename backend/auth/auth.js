@@ -27,13 +27,16 @@ export function authRequired(req, res, next) {
 }
 
 export async function verifySchoolCode(plain) {
+  // Query the database for active schools
   const schools = await SchoolModel.find({ active: true });
-  for (const s of schools) {
-    if (s.codeHash && await bcrypt.compare(plain, s.codeHash)) {
-      if (s.expiresAt && s.expiresAt < new Date()) return null;
-      if (s.maxUses > 0 && s.used >= s.maxUses) return null;
-      return s;
+
+  // Iterate over the schools and compare the hashed code
+  for (const school of schools) {
+    if (school.codeHash && await bcrypt.compare(plain, school.codeHash)) {
+      return school; // Return the matching school
     }
   }
+
+  // If no match is found, return null
   return null;
 }
