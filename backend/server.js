@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');            // ADD
 const jwt = require('jsonwebtoken');                      // ADD
 const bcrypt = require('bcryptjs');                       // ADD
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -71,15 +72,20 @@ function authRequired(req, res, next) {
   }
 }
 
-// Verify school code (placeholder; implement lookup + bcrypt compare)
+// Verify school code using SHA256 hash (codeIdentifier)
 async function verifySchoolCode(plain) {
-  // Find all active schools
-  const schools = await SchoolModel.find({ active: true });
-  for (const school of schools) {
-    if (school.codeHash && await bcrypt.compare(plain, school.codeHash)) {
-      return school;
-    }
+  // Compute the SHA256 hash of the input code
+  const codeIdentifier = crypto.createHash('sha256').update(String(plain)).digest('hex');
+
+  // Query the database for the school with the matching codeIdentifier
+  const school = await SchoolModel.findOne({ codeIdentifier, active: true });
+
+  // If a matching school is found, return it
+  if (school) {
+    return school;
   }
+
+  // If no match is found, return null
   return null;
 }
 
