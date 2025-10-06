@@ -5,14 +5,6 @@ import platform from 'platform';
 
 
 export default function SpeedTestForm({ isRunning, onSubmit }) {
-  // Load from localStorage if available
-  const [name, setName] = useState(() => localStorage.getItem('speedtest_name') || 'Anonymous');
-  const [deviceModel, setDeviceModel] = useState(() => localStorage.getItem('speedtest_deviceModel') || '');
-  const [connectionType, setConnectionType] = useState(() => localStorage.getItem('speedtest_connectionType') || '');
-  const [location, setLocation] = useState('');
-  const [userEditedLocation, setUserEditedLocation] = useState(false);
-  const [customConnectionType, setCustomConnectionType] = useState('');
-  const [notes, setNotes] = useState('');
   const [isp, setISP] = useState('');
   const [ip, setIP] = useState('');
   const [os, setOS] = useState('');
@@ -24,7 +16,7 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
     getISPInfo().then(data => {
       setISP(data.connection?.org || data.connection?.isp || data.org || data.isp || '');
       setIP(data.ip || '');
-      setLocation([data.city, data.region, data.country].filter(Boolean).join(', '));
+      setGeo([data.latitude, data.longitude].filter(Boolean).join(', '));
     });
     setOS([platform.os?.family, platform.os?.version].filter(Boolean).join(' '));
     setBrowser([platform.name, platform.version].filter(Boolean).join(' '));
@@ -38,123 +30,21 @@ export default function SpeedTestForm({ isRunning, onSubmit }) {
     setNetworkInfo(getConnectionInfo());
   }, []);
 
-  // If you use useLocationFromGeo, re-import and use it here
-  // import { useLocationFromGeo } from '../hooks/useLocationFromGeo';
-  // const { location: autoLocation } = useLocationFromGeo(geo);
-  // useEffect(() => {
-  //   if (autoLocation && !userEditedLocation) setLocation(autoLocation);
-  // }, [autoLocation, userEditedLocation]);
-
-  // Updated to send 'Anonymous' as the name without displaying the field
   return (
     <form
       onSubmit={e => {
         e.preventDefault();
         onSubmit({
-          name: 'Anonymous', // Always send 'Anonymous' as the name
-          location,
-          deviceModel,
-          os,
-          connectionType,
-          customConnectionType,
           isp,
           ip,
           geo,
           browser,
+          os,
           networkInfo
         });
       }}
       className={style.formContainer}
     >
-      <h2 style={{marginBottom: 8, marginTop: 0}}>Your Information (Editable)</h2>
-
-      <label className={style.label}>Location</label>
-      <div className={style.inputEditRow} style={{ position: 'relative' }}>
-        <input
-          type="text"
-          placeholder="Auto or enter your school/city"
-          value={location}
-          onChange={e => { setLocation(e.target.value); setUserEditedLocation(true); }}
-          className={style.input}
-        />
-        <button
-          type="button"
-          className={style.editBtn}
-          aria-label="Edit Location"
-          tabIndex={-1}
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-        </button>
-      </div>
-
-      <label className={style.label}>Device Model</label>
-      <div className={style.inputEditRow} style={{ position: 'relative' }}>
-        <input
-          type="text"
-          placeholder="e.g. MacBook Pro, Galaxy S23"
-          value={deviceModel}
-          onChange={e => {
-            setDeviceModel(e.target.value);
-            localStorage.setItem('speedtest_deviceModel', e.target.value);
-          }}
-          className={style.input}
-        />
-        <button
-          type="button"
-          className={style.editBtn}
-          aria-label="Edit Device Model"
-          tabIndex={-1}
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-        </button>
-      </div>
-
-      <label className={style.label}>Connection Type</label>
-      <div className={style.inputEditRow} style={{ position: 'relative' }}>
-        <select
-          value={connectionType}
-          onChange={e => {
-            setConnectionType(e.target.value);
-            localStorage.setItem('speedtest_connectionType', e.target.value);
-          }}
-          className={style.select}
-          style={{ width: '100%' }}
-        >
-          <option value="">Select connection</option>
-          <option value="WiFi">WiFi</option>
-          <option value="Ethernet">Ethernet</option>
-          <option value="Mobile data">Mobile data</option>
-          <option value="Other">Other (type below)</option>
-        </select>
-        <button
-          type="button"
-          className={style.editBtn}
-          aria-label="Edit Connection Type"
-          tabIndex={-1}
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-        </button>
-      </div>
-      {connectionType === "Other" && (
-        <div className={style.inputEditRow} style={{ position: 'relative' }}>
-          <input
-            type="text"
-            value={customConnectionType}
-            onChange={e => setCustomConnectionType(e.target.value)}
-            placeholder="Describe your connection"
-            className={style.input}
-          />
-          <button
-            type="button"
-            className={style.editBtn}
-            aria-label="Edit Custom Connection Type"
-            tabIndex={-1}
-          >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign:'middle'}}><path d="M15.6 2.6a2.121 2.121 0 0 1 3 3l-1.3 1.3-3-3 1.3-1.3zm-2 2 3 3-9.6 9.6H4v-3.6l9.6-9.6z" fill="currentColor"/></svg>
-          </button>
-        </div>
-      )}
-
       <h2 style={{marginTop: 32, marginBottom: 8}}>Auto-Detected Information</h2>
       <label className={style.label}>ISP</label>
       <input type="text" value={isp} readOnly className={style.input} />
