@@ -190,18 +190,31 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 // Remove duplicate app.post('/api/results', ...) to avoid conflicts
 
 app.post('/api/results', authRequired, async (req, res) => {
-  // req.user should have uid and sid (schoolId)
-  const { uid, sid } = req.user;
-  const { ...resultData } = req.body;
+  try {
+    // req.user should have uid and sid (schoolId)
+    const { uid, sid } = req.user;
+    const { ...resultData } = req.body;
 
-  // Save the result with user and school info
-  const result = await ResultModel.create({
-    ...resultData,
-    userId: uid,
-    schoolId: sid || null,
-  });
+    // Fetch the school's location if a school ID is provided
+    let location = null;
+    if (sid) {
+      const school = await SchoolModel.findById(sid).lean();
+      location = school?.location || null;
+    }
 
-  res.status(201).json({ ok: true, result });
+    // Save the result with user, school, and location info
+    const result = await ResultModel.create({
+      ...resultData,
+      userId: uid,
+      schoolId: sid || null,
+      location, // Add the location field
+    });
+
+    res.status(201).json({ ok: true, result });
+  } catch (err) {
+    console.error('Error saving result:', err);
+    res.status(500).json({ error: 'Failed to save result' });
+  }
 });
 
 mongoose.connect(process.env.MONGO_URI)

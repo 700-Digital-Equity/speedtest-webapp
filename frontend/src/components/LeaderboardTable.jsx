@@ -9,9 +9,6 @@ export const LeaderboardTable = React.memo(function LeaderboardTable({ results, 
     >
       <thead>
         <tr>
-          <th onClick={() => handleSort('deviceModel')} style={{ cursor: 'pointer', width: 120, maxWidth: 140, minWidth: 80 }}>
-            Device {sortKey === 'deviceModel' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-          </th>
           <th
             onClick={() => handleSort('location')}
             style={{ cursor: 'pointer', width: 180, maxWidth: 180, minWidth: 180 }}
@@ -35,9 +32,6 @@ export const LeaderboardTable = React.memo(function LeaderboardTable({ results, 
       <tbody>
         {results.map((entry, i) => (
           <tr key={i}>
-            <td style={{ width: 120, maxWidth: 140, minWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={entry.deviceModel}>
-              {entry.deviceModel || ''}
-            </td>
             <td
               style={{ width: 180, maxWidth: 180, minWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               title={entry.location}

@@ -5,6 +5,7 @@ const SchoolSchema = new Schema({
   name: { type: String, required: true },
   codeHash: String,
   codeIdentifier: { type: String }, // Add the codeIdentifier field
+  location: { type: String }, // Add the location field
   expiresAt: Date,
   maxUses: { type: Number, default: 0 }, // 0 = unlimited
   used: { type: Number, default: 0 },
