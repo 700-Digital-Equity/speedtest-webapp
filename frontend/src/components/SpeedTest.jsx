@@ -41,166 +41,168 @@ export default function SpeedTest() {
 
   // Measure ping
   const median = arr => {
-    const mid = Math.floor(arr.length / 2);
-    const sorted = [...arr].sort((a, b) => a - b);
-    return sorted.length % 2 !== 0
-      ? sorted[mid]
-      : (sorted[mid - 1] + sorted[mid]) / 2;
-  };
+  const mid = Math.floor(arr.length / 2);
+  const sorted = [...arr].sort((a, b) => a - b);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+};
 
-  const measurePing = async () => {
-    const times = [];
+const measurePing = async () => {
+  const times = [];
 
-    for (let i = 0; i < 7; i++) {
-      const start = performance.now();
-      try {
-        await fetch(`${SERVER}/ping.json?t=${Date.now()}`);
-        const end = performance.now();
-        times.push(end - start);
-      } catch {
-        times.push(999);
-      }
+  for (let i = 0; i < 7; i++) {
+    const start = performance.now();
+    try {
+      await fetch(`${SERVER}/ping.json?t=${Date.now()}`);
+      const end = performance.now();
+      times.push(end - start);
+    } catch {
+      times.push(999);
     }
+  }
 
-    return median(times).toFixed(2);
-  };
+  return median(times).toFixed(2);
+};
 
   // Update the runTest function to accept formData as parameter
-  const runTest = async (formData) => {
-    let ping = null;
-    let jitter = null;
-    let packetLoss = null;
+const runTest = async (formData) => {
 
-    // Clear live results state for new test
-    setLivePing(null);
-    setLiveJitter(null);
-    setLivePacketLoss(null);
-    setLiveDownload(null);
-    setLiveUpload(null);
-    setLiveDownloadHistory([]);
-    setLiveUploadHistory([]);
+  // Before running the test, declare variables:
+  let ping = null;
+  let jitter = null;
+  let packetLoss = null;
 
-    try {
-      setIsRunning(true);
-      setResults(null);
-      setProgressStep('Measuring ping...');
-      const medianPing = await measurePing();
-      setLivePing(medianPing);
+  // Clear live results state for new test
+  setLivePing(null);
+  setLiveJitter(null);
+  setLivePacketLoss(null);
+  setLiveDownload(null);
+  setLiveUpload(null);
+  setLiveDownloadHistory([]);
+  setLiveUploadHistory([]);
 
-      setProgressStep('Measuring ping...');
-      const pingStats = await pingTest(`${SERVER}/ping.json`);
-      ping = pingStats?.ping ?? medianPing ?? null;
-      jitter = pingStats?.jitter ?? null;
-      packetLoss = pingStats?.packetLoss ?? null;
+  try {
+    setIsRunning(true);
+    setResults(null);
+    setProgressStep('Measuring ping...');
+    const medianPing = await measurePing();
+    setLivePing(medianPing);
 
-      setLiveJitter(jitter);
-      setLivePacketLoss(packetLoss);
+    setProgressStep('Measuring ping...');
+    const pingStats = await pingTest(`${SERVER}/ping.json`);
+    ping = pingStats?.ping ?? medianPing ?? null;
+    jitter = pingStats?.jitter ?? null;
+    packetLoss = pingStats?.packetLoss ?? null;
 
-      // --- Download with spike suppression (global) ---
-      setProgressStep('Testing Download speed...');
-      await warmUpDownload();
-      const download = await adaptiveDownload({
-        onProgress: (speed, totalBytes, globalStartTime) => {
-          const elapsed = (performance.now() - globalStartTime) / 1000;
-          if (elapsed > 1 || totalBytes > 1_000_000) {
-            const val = Number(speed).toFixed(2);
-            setLiveDownload(val);
-            setLiveDownloadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
-          }
-        }
-      });
+    setLiveJitter(jitter);
+    setLivePacketLoss(packetLoss);
 
-      // --- Upload with spike suppression (global) ---
-      setProgressStep('Testing Upload speed...');
-      const upload = await adaptiveUpload({
-        onProgress: (speed, totalBytes, globalStartTime) => {
-          const elapsed = (performance.now() - globalStartTime) / 1000;
-          if (elapsed > 1 || totalBytes > 1_000_000) {
-            const val = Number(speed).toFixed(2);
-            setLiveUpload(val);
-            setLiveUploadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
-          }
-        }
-      });
-
-      setProgressStep('Test complete!');
-      setResults({ ping, jitter, packetLoss, download, upload });
-
-      const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-      const finalConnectionType =
-        formData.connectionType === 'Other'
-          ? (formData.customConnectionType || 'Other')
-          : formData.connectionType;
-
-      // Optional: convert "lat, lon" string to GeoJSON Point for backend
-      let geoPoint = null;
-      if (formData.geo) {
-        const [latStr, lonStr] = formData.geo.split(',').map(s => s.trim());
-        const lat = Number(latStr), lon = Number(lonStr);
-        if (Number.isFinite(lat) && Number.isFinite(lon)) {
-          geoPoint = { type: 'Point', coordinates: [lon, lat] };
+    // --- Download with spike suppression (global) ---
+    setProgressStep('Testing Download speed...');
+    await warmUpDownload();
+    const download = await adaptiveDownload({
+      onProgress: (speed, totalBytes, globalStartTime) => {
+        const elapsed = (performance.now() - globalStartTime) / 1000;
+        if (elapsed > 1 || totalBytes > 1_000_000) {
+          const val = Number(speed).toFixed(2);
+          setLiveDownload(val);
+          setLiveDownloadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
         }
       }
+    });
 
-      // After posting the result and getting the latest result object:
-      await postResult({
-        ip: publicIP.ip,
-        name: formData.name,
-        location: formData.location,
-        ping,
-        jitter,
-        packetLoss,
-        download,
-        upload,
-        deviceModel: formData.deviceModel,
-        os: formData.os,
-        connectionType: finalConnectionType,
-        geo: geoPoint ?? formData.geo ?? null,
-        isp: formData.isp,
-        browser: formData.browser,
-        notes: formData.notes,
-        timestamp: new Date().toISOString(),
-      });
+    // --- Upload with spike suppression (global) ---
+    setProgressStep('Testing Upload speed...');
+    const upload = await adaptiveUpload({
+      onProgress: (speed, totalBytes, globalStartTime) => {
+        const elapsed = (performance.now() - globalStartTime) / 1000;
+        if (elapsed > 1 || totalBytes > 1_000_000) {
+          const val = Number(speed).toFixed(2);
+          setLiveUpload(val);
+          setLiveUploadHistory(prev => ([...prev, { time: performance.now() - globalStartTime, value: Number(val) }]));
+        }
+      }
+    });
 
-      // Reflect the submitted info in UI (from the same formData)
-      setName(formData.name);
-      setLocation(formData.location);
-      setDeviceModel(formData.deviceModel);
-      setConnectionType(finalConnectionType);
-      setOs(formData.os);
-      setNotes(formData.notes);
-      setGeo(formData.geo);
-      setISP(formData.isp);
-      setBrowser(formData.browser);
+    setProgressStep('Test complete!');
+    setResults({ ping, jitter, packetLoss, download, upload });
 
-      // Persist locally (optional, for local history)
-      const past = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
-      past.unshift({
-        timestamp: new Date().toISOString(),
-        name: formData.name,
-        location: formData.location,
-        ping, jitter, packetLoss, download, upload,
-        deviceModel: formData.deviceModel,
-        os: formData.os,
-        connectionType: finalConnectionType,
-        geo: formData.geo,
-        isp: formData.isp,
-        browser: formData.browser,
-        notes: formData.notes
-      });
-      localStorage.setItem('pastSpeedTests', JSON.stringify(past.slice(0, 50)));
+    const publicIP = await fetch('https://api.ipify.org?format=json').then(r => r.json());
+    const finalConnectionType =
+      formData.connectionType === 'Other'
+        ? (formData.customConnectionType || 'Other')
+        : formData.connectionType;
 
-      // Fetch all results from backend and update state
-      const data = await fetchResults({ page: 1, pageSize: 1000 });
-      setResults(data.results);
-      console.log('Results for map:', results);
-    } catch (e) {
-      setResults({ error: String(e) });
-      setProgressStep('Something went wrong.');
-    } finally {
-      setIsRunning(false);
+    // Optional: convert "lat, lon" string to GeoJSON Point for backend
+    let geoPoint = null;
+    if (formData.geo) {
+      const [latStr, lonStr] = formData.geo.split(',').map(s => s.trim());
+      const lat = Number(latStr), lon = Number(lonStr);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        geoPoint = { type: 'Point', coordinates: [lon, lat] };
+      }
     }
-  };
+
+    // After posting the result and getting the latest result object:
+    await postResult({
+      ip: publicIP.ip,
+      name: formData.name,
+      location: formData.location,
+      ping,
+      jitter,
+      packetLoss,
+      download,
+      upload,
+      deviceModel: formData.deviceModel,
+      os: formData.os,
+      connectionType: finalConnectionType,
+      geo: geoPoint ?? formData.geo ?? null,
+      isp: formData.isp,
+      browser: formData.browser,
+      notes: formData.notes,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Reflect the submitted info in UI (from the same formData)
+    setName(formData.name);
+    setLocation(formData.location);
+    setDeviceModel(formData.deviceModel);
+    setConnectionType(finalConnectionType);
+    setOs(formData.os);
+    setNotes(formData.notes);
+    setGeo(formData.geo);
+    setISP(formData.isp);
+    setBrowser(formData.browser);
+
+    // Persist locally (optional, for local history)
+    const past = JSON.parse(localStorage.getItem('pastSpeedTests') || '[]');
+    past.unshift({
+      timestamp: new Date().toISOString(),
+      name: formData.name,
+      location: formData.location,
+      ping, jitter, packetLoss, download, upload,
+      deviceModel: formData.deviceModel,
+      os: formData.os,
+      connectionType: finalConnectionType,
+      geo: formData.geo,
+      isp: formData.isp,
+      browser: formData.browser,
+      notes: formData.notes
+    });
+    localStorage.setItem('pastSpeedTests', JSON.stringify(past.slice(0, 50)));
+
+    // Fetch all results from backend and update state
+    const data = await fetchResults({ page: 1, pageSize: 1000 });
+    setResults(data.results);
+    console.log('Results for map:', results);
+  } catch (e) {
+    setResults({ error: String(e) });
+    setProgressStep('Something went wrong.');
+  } finally {
+    setIsRunning(false);
+  }
+};
 
   // Map step -> percent for a simple progress bar
   const progressPercent = React.useMemo(() => {
