@@ -23,6 +23,20 @@ export default function CodeLogin({ onSignedIn }) {
 
   return (
     <div className={styles.formContainer}>
+      {/* Add the kind message */}
+      <div style={{
+        background: '#fffbe6',
+        color: '#856404',
+        border: '1px solid #ffeeba',
+        borderRadius: 8,
+        padding: '12px 16px',
+        marginBottom: 16,
+        textAlign: 'center',
+        fontSize: 14,
+      }}>
+        Our servers are currently experiencing high traffic. If you encounter any issues, please try again later. Thank you for your patience!
+      </div>
+
       <h2 style={{ textAlign: 'center', marginBottom: 16 }}>Sign in</h2>
       {err && <div style={{ color: 'red', marginBottom: 8 }}>{err}</div>}
 
