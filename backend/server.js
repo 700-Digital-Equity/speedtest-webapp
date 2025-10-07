@@ -191,23 +191,22 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 app.post('/api/results', authRequired, async (req, res) => {
   try {
-    // req.user should have uid and sid (schoolId)
     const { uid, sid } = req.user;
     const { ...resultData } = req.body;
 
-    // Fetch the school's location if a school ID is provided
     let location = null;
     if (sid) {
       const school = await SchoolModel.findById(sid).lean();
       location = school?.location || null;
     }
 
-    // Save the result with user, school, and location info
+    console.log('Result Data:', { ...resultData, location }); // Log the data being saved
+
     const result = await ResultModel.create({
       ...resultData,
       userId: uid,
       schoolId: sid || null,
-      location, // Add the location field
+      location,
     });
 
     res.status(201).json({ ok: true, result });
