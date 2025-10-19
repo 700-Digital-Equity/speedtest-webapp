@@ -78,39 +78,8 @@ The backend is built with Node.js and Express, using MongoDB for data storage.
    ```bash
    npm install
    ```
-3. Set up the backend:
-   - Create a `.env` file in the `backend/` directory based on the `.env.example` file.
-   - Start the MongoDB server.
-   - Run the backend:
-     ```bash
-     cd backend
-     node server.js
-     ```
-4. Start the frontend:
+3. Start the frontend:
    ```bash
    cd frontend
    npm run dev
    ```
-
-## Usage
-
-1. Open the app in your browser (usually at `http://localhost:3000`).
-2. Run a speed test by clicking the "Run Test" button.
-3. View real-time results and historical data in the dashboard.
-4. Analyze data using the provided graphs and tables.
-5. Compare your results with others on the leaderboard.
-6. For school associations, enter the unique school code during login.
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and commit them.
-4. Push your branch to your forked repository.
-5. Create a pull request describing your changes.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
