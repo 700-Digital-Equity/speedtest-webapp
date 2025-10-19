@@ -22,12 +22,12 @@ The frontend is built with React and Vite. It includes components for the user i
 - **`src/`**: Contains the main application code.
   - **`App.jsx`**: Main application component.
   - **`components/`**: React components for the app.
-    - **`SpeedTest.jsx`**: Core component for running speed tests.
+    - **`SpeedTest.jsx`**: Core component for running speed tests. Tests are defined in **`AdaptiveTest.jsx`**
     - **`ResultsDashboard.jsx`**: Displays test results with filtering and sorting.
     - **`Leaderboard.jsx`**: Displays top results in a leaderboard format.
     - **`CodeLogin.jsx`**: Handles user login with school codes.
     - **`RegionAverages.jsx`**: Shows average metrics for a region.
-    - **`FloatingResultsTable.jsx`**: Draggable and resizable table for results.
+    - **`FloatingResultsTable.jsx`**: Draggable and resizable table for results on the results map
   - **`graphs/`**: Components for data visualization.
     - **`DownloadUploadLineGraph.jsx`**: Line graph for download/upload speeds over time.
     - **`LatencyJitterLineGraph.jsx`**: Line graph for latency and jitter over time.
