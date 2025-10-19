@@ -6,7 +6,6 @@ const resultSchema = new mongoose.Schema({
   ping: Number,
   download: Number,
   upload: Number,
-  location: String,
   jitter: Number,
   packetLoss: Number,
   geo: Object,              
@@ -18,6 +17,7 @@ const resultSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   schoolId: { type: mongoose.Schema.Types.ObjectId, ref: 'School', default: null },
+  location: String
 });
 
 module.exports = mongoose.model('Result', resultSchema);

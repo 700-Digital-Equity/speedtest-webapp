@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Result = require('../models/Result');
+const School = require('../models/School'); // Import the School model
 
 // Use req.authRequired as middleware
 router.post('/', function(req, res, next) {
@@ -10,10 +11,18 @@ router.post('/', function(req, res, next) {
     const { uid, sid } = req.user;
     const resultData = req.body;
 
+    // Fetch the location from the School model if sid is provided
+    let location = null;
+    if (sid) {
+      const school = await School.findById(sid).lean();
+      location = school?.location || null;
+    }
+
     const result = await Result.create({
       ...resultData,
       userId: uid,
       schoolId: sid || null,
+      location, // Add the location field
     });
 
     res.status(201).json({ ok: true, result });
